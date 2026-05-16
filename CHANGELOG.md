@@ -2,6 +2,17 @@
 
 ---
 
+## v1.1.5 — Edit Supplier Fix & Filter Improvement
+**Files:** `config.js`, `supplier-tracker.html`, `apps-script.js`
+
+- fix: Edit supplier not saving — setNumberFormat was applied before setValues, preventing write; now applied after
+- fix: addSupplier same issue — appendRow first, then fix kontak cell format
+- fix: saveSupplier now preserves original createdBy & createdAt on edit (was overwriting with current user/time)
+- fix: updateSupplier error message now includes supplier id for easier debugging
+- fix: City chip count now based on active level + unit bisnis filters (not total all suppliers)
+
+---
+
 ## v1.1.4 — Feature Update & Bug Fix Batch 3
 **Files:** `config.js`, `index.html`, `supplier-tracker.html`, `apps-script.js`
 

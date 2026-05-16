@@ -828,13 +828,17 @@ function renderSuppliers() {
     ${allUnits.map(u => `<div class="chip ${unitFilter===u?'active':''}" onclick="setUnitFilter(this,'${u}')">${u}</div>`).join('')}
   ` : '';
 
-  // Render city filter chips (dynamic from DB)
+  // Render city filter chips — count based on level+unit filtered list (before city filter)
+  const preCity = DB.suppliers.filter(s =>
+    (!levelFilter || s.level === levelFilter) &&
+    (!unitFilter  || (s.units||[]).includes(unitFilter))
+  );
   const cityEl = document.getElementById('filter-city');
-  const allCities = [...new Set(DB.suppliers.map(s => s.kota).filter(Boolean))].sort();
+  const allCities = [...new Set(preCity.map(s => s.kota).filter(Boolean))].sort();
   cityEl.innerHTML = allCities.length ? `
     <div class="chip ${!cityFilter?'active':''}" onclick="setCityFilter(this,'')">Semua Kota</div>
     ${allCities.map(c => {
-      const count = DB.suppliers.filter(s => s.kota === c).length;
+      const count = preCity.filter(s => s.kota === c).length;
       return `<div class="chip ${cityFilter===c?'active':''}" onclick="setCityFilter(this,'${c}')">${c} (${count})</div>`;
     }).join('')}
   ` : '';
@@ -1102,6 +1106,9 @@ async function saveSupplier() {
   if (!name || !level) { showToast('Nama & level wajib diisi', 'error'); return; }
 
   const units = [...document.querySelectorAll('#f-supplier-units .multi-chip.selected')].map(c=>c.textContent);
+
+  // On edit, preserve original createdBy & createdAt
+  const original = editMode ? DB.suppliers.find(x => x.id === currentSupplierId) : null;
   const payload = {
     id: editMode ? currentSupplierId : genId(),
     name, level,
@@ -1109,7 +1116,9 @@ async function saveSupplier() {
     kota: document.getElementById('f-supplier-kota').value.trim(),
     authorized: document.getElementById('f-supplier-auth').checked,
     catatan: document.getElementById('f-supplier-catatan').value.trim(),
-    units, createdBy: getUser().name, createdAt: new Date().toISOString()
+    units,
+    createdBy: original ? original.createdBy : getUser().name,
+    createdAt: original ? original.createdAt : new Date().toISOString()
   };
 
   closeSheet('overlay-supplier');

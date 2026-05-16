@@ -119,16 +119,19 @@ function getAll() {
 function addSupplier(data) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(TABS.suppliers);
-  const nextRow = sheet.getLastRow() + 1;
   const rowData = [
     data.id, data.name, data.kontak || '', data.kota || '',
     data.level, JSON.stringify(data.units || []),
     data.authorized ? 'TRUE' : 'FALSE',
     data.catatan || '', data.createdBy, data.createdAt
   ];
-  // Set text format on entire row first, then write
-  sheet.getRange(nextRow, 1, 1, rowData.length).setNumberFormat('@');
-  sheet.getRange(nextRow, 1, 1, rowData.length).setValues([rowData]);
+
+  // Append row first, then fix kontak cell format
+  sheet.appendRow(rowData);
+  const newRow = sheet.getLastRow();
+  sheet.getRange(newRow, 3).setNumberFormat('@');
+  sheet.getRange(newRow, 3).setValue(data.kontak || '');
+
   return { ok: true };
 }
 
@@ -136,7 +139,7 @@ function updateSupplier(data) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(TABS.suppliers);
   const rowIdx = findRow(sheet, data.id);
-  if (rowIdx < 0) return { ok: false, error: 'Supplier tidak ditemukan' };
+  if (rowIdx < 0) return { ok: false, error: 'Supplier tidak ditemukan: ' + data.id };
 
   const rowData = [
     data.id, data.name, data.kontak || '', data.kota || '',
@@ -144,9 +147,12 @@ function updateSupplier(data) {
     data.authorized ? 'TRUE' : 'FALSE',
     data.catatan || '', data.createdBy, data.createdAt
   ];
-  // Set text format on kontak cell specifically, then write row
-  sheet.getRange(rowIdx, 3).setNumberFormat('@');
+
+  // Write data first, then force text format on kontak cell only
   sheet.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
+  sheet.getRange(rowIdx, 3).setNumberFormat('@');
+  sheet.getRange(rowIdx, 3).setValue(data.kontak || '');
+
   return { ok: true };
 }
 
