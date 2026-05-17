@@ -121,17 +121,16 @@ function addSupplier(data) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(TABS.suppliers);
   const newRow = sheet.getLastRow() + 1;
-
-  // Set kontak cell to plain text BEFORE writing — preserves leading zeros
-  sheet.getRange(newRow, 3).setNumberFormat('@');
-
   const rowData = [
     data.id, data.name, data.kontak || '', data.kota || '',
     data.level, JSON.stringify(data.units || []),
     data.authorized ? 'TRUE' : 'FALSE',
     data.catatan || '', data.createdBy, data.createdAt
   ];
+  // Write values first, then set format — setValues resets format so order matters
   sheet.getRange(newRow, 1, 1, rowData.length).setValues([rowData]);
+  sheet.getRange(newRow, 3).setNumberFormat('@');
+  sheet.getRange(newRow, 3).setValue(data.kontak || '');
   return { ok: true };
 }
 
@@ -141,16 +140,16 @@ function updateSupplier(data) {
   const rowIdx = findRow(sheet, data.id);
   if (rowIdx < 0) return { ok: false, error: 'Supplier tidak ditemukan: ' + data.id };
 
-  // Set kontak cell to plain text BEFORE writing — preserves leading zeros
-  sheet.getRange(rowIdx, 3).setNumberFormat('@');
-
   const rowData = [
     data.id, data.name, data.kontak || '', data.kota || '',
     data.level, JSON.stringify(data.units || []),
     data.authorized ? 'TRUE' : 'FALSE',
     data.catatan || '', data.createdBy, data.createdAt
   ];
+  // Write values first, then set format — setValues resets format so order matters
   sheet.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
+  sheet.getRange(rowIdx, 3).setNumberFormat('@');
+  sheet.getRange(rowIdx, 3).setValue(data.kontak || '');
   return { ok: true };
 }
 
