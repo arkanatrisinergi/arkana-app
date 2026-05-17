@@ -120,12 +120,17 @@ function addSupplier(data) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(TABS.suppliers);
 
-  sheet.appendRow([
+  // Use getLastRow + setValues instead of appendRow
+  // appendRow commits value before Table column format applies — loses leading zeros
+  // setValues respects existing column text format set in the Table
+  const newRow = sheet.getLastRow() + 1;
+  const rowData = [
     data.id, data.name, data.kontak || '', data.kota || '',
     data.level, JSON.stringify(data.units || []),
     data.authorized ? 'TRUE' : 'FALSE',
     data.catatan || '', data.createdBy, data.createdAt
-  ]);
+  ];
+  sheet.getRange(newRow, 1, 1, rowData.length).setValues([rowData]);
 
   return { ok: true };
 }
