@@ -2,6 +2,32 @@
 
 ---
 
+## v1.2.0 — PRD-01.2 Produk vs Jasa Entry Typing
+**Files:** `config.js`, `supplier-tracker.html`, `apps-script.js`
+
+- feat: Jasa tab added as 4th tab (Supplier · Produk · Jasa · Compare)
+- feat: Jasa entries grouped by service name A-Z with rate comparison per service
+- feat: Add Jasa entry form — namaJasa, rate, unit rate, catatan
+- feat: Supplier detail shows grouped 📦 Produk and 🔧 Jasa sections
+- feat: Add Jasa entry from supplier detail or Jasa tab FAB
+- feat: Best rate highlighted per service group (purple)
+- feat: Apps Script addPrice stores type and namaJasa fields
+- feat: PriceEntries headers updated with type and namaJasa columns
+- fix: All tab labels now in Bahasa (Supplier · Produk · Jasa · Compare)
+- fix: Compare tab now Produk entries only
+
+---
+
+## v1.1.7 — Jasa Level Quick Fix
+**Files:** `config.js`, `supplier-tracker.html`
+
+- feat: "Jasa" added as level option in supplier form and filter chips
+- feat: Jasa badge (purple) shown instead of L1–L4 for service providers
+- fix: Authorized badge hidden for Jasa level suppliers
+- fix: Supplier detail shows "🔧 Jasa / Service Provider" for Jasa level
+
+---
+
 ## v1.1.6 — Add Supplier Phone Fix & Detail Refresh
 **Files:** `config.js`, `supplier-tracker.html`, `apps-script.js`
 

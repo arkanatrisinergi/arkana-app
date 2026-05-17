@@ -225,6 +225,29 @@
   .compare-row.best .compare-price { color:var(--green); }
   .best-label { font-size:9px; font-weight:700; color:var(--green); background:rgba(16,185,129,.12); padding:2px 6px; border-radius:10px; }
 
+  /* ── Jasa cards ── */
+  .jasa-card {
+    background:var(--surface); border:1.5px solid var(--border);
+    border-radius:14px; padding:14px 16px; cursor:pointer; transition:border-color .2s;
+  }
+  .jasa-card:active { opacity:.85; }
+  .jasa-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+  .jasa-card-name { font-size:14px; font-weight:700; color:var(--text); flex:1; margin-right:8px; line-height:1.3; }
+  .jasa-card-count { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); white-space:nowrap; }
+  .jasa-best-rate { font-size:15px; font-weight:700; color:var(--purple); margin-bottom:2px; }
+  .jasa-best-supplier { font-size:11px; color:var(--text3); }
+
+  /* Jasa compare rows */
+  .jasa-compare-row {
+    display:flex; align-items:center; gap:8px; padding:8px 10px;
+    background:var(--surface2); border-radius:8px; margin-bottom:6px;
+  }
+  .jasa-compare-row.best { border:1px solid rgba(139,92,246,.3); background:rgba(139,92,246,.05); }
+  .jasa-compare-row.best .jasa-compare-rate { color:var(--purple); }
+  .jasa-compare-supplier { flex:1; font-size:12px; font-weight:600; color:var(--text); }
+  .jasa-compare-rate { font-size:13px; font-weight:700; color:var(--text); }
+  .jasa-best-label { font-size:9px; font-weight:700; color:var(--purple); background:rgba(139,92,246,.12); padding:2px 6px; border-radius:10px; }
+
   /* ── Empty state ── */
   .empty-state {
     display:flex; flex-direction:column; align-items:center;
@@ -446,8 +469,9 @@
     </div>
 
     <div class="tab-bar">
-      <div class="tab active" id="tab-suppliers" onclick="switchTab('suppliers')">Suppliers</div>
+      <div class="tab active" id="tab-suppliers" onclick="switchTab('suppliers')">Supplier</div>
       <div class="tab" id="tab-products" onclick="switchTab('products')">Produk</div>
+      <div class="tab" id="tab-jasa" onclick="switchTab('jasa')">Jasa</div>
       <div class="tab" id="tab-compare" onclick="switchTab('compare')">Compare</div>
     </div>
 
@@ -482,6 +506,15 @@
         <input type="text" class="search-input" placeholder="Cari produk..." id="search-products" oninput="renderProducts()">
       </div>
       <div class="card-list" id="list-products"></div>
+    </div>
+
+    <!-- Jasa Tab -->
+    <div id="pane-jasa" class="scroll-content" style="display:none">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Cari layanan jasa..." id="search-jasa" oninput="renderJasa()">
+      </div>
+      <div class="card-list" id="list-jasa"></div>
     </div>
 
     <!-- Compare Tab -->
@@ -667,6 +700,49 @@
   </div>
 </div>
 
+<!-- ══ ADD JASA ENTRY SHEET ══ -->
+<div class="overlay" id="overlay-jasa">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Tambah Layanan Jasa</div>
+    <div class="sheet-sub" id="jasa-sheet-sub">Data akan tersimpan ke Google Sheet</div>
+
+    <div class="form-group">
+      <label class="form-label">Supplier *</label>
+      <select class="form-select" id="f-jasa-supplier"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Layanan *</label>
+      <input type="text" class="form-input" id="f-jasa-nama" placeholder="e.g. Website Development, Jahit Seragam">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Rate (Rp) *</label>
+      <input type="number" class="form-input" id="f-jasa-harga" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Unit Rate *</label>
+      <select class="form-select" id="f-jasa-satuan">
+        <option value="per project">per project</option>
+        <option value="per jam">per jam</option>
+        <option value="per hari">per hari</option>
+        <option value="per bulan">per bulan</option>
+        <option value="per m²">per m²</option>
+        <option value="per unit">per unit</option>
+        <option value="per pcs">per pcs</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catatan / Scope</label>
+      <textarea class="form-textarea" id="f-jasa-catatan" placeholder="Scope, deliverables, syarat, dll..."></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeSheet('overlay-jasa')">Batal</button>
+      <button class="btn btn-primary" onclick="saveJasaEntry()">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ ADD: CHOOSE WHAT TO ADD ══ -->
 <div class="overlay" id="overlay-add-choice">
   <div class="sheet">
@@ -681,6 +757,10 @@
       <button class="btn btn-secondary" style="text-align:left;padding:16px 18px;" onclick="closeSheet('overlay-add-choice');openAddProduct()">
         <div style="font-size:16px;margin-bottom:2px;">📦 Produk Baru</div>
         <div style="font-size:12px;font-weight:400;color:var(--text3)">Tambah produk + harga awal</div>
+      </button>
+      <button class="btn btn-secondary" style="text-align:left;padding:16px 18px;" onclick="closeSheet('overlay-add-choice');openAddJasa(null)">
+        <div style="font-size:16px;margin-bottom:2px;">🔧 Jasa Baru</div>
+        <div style="font-size:12px;font-weight:400;color:var(--text3)">Tambah layanan jasa dari supplier</div>
       </button>
     </div>
     <div class="btn-row" style="margin-top:12px;">
@@ -793,6 +873,7 @@ function loadFromCache() {
 function renderAll() {
   renderSuppliers();
   renderProducts();
+  if (currentTab === 'jasa') renderJasa();
   renderCompare();
   renderUnitChips();
   populateSupplierDropdowns();
@@ -954,10 +1035,77 @@ function renderUnitChips() {
   ).join('');
 }
 
+function renderJasa() {
+  const q = (document.getElementById('search-jasa')?.value || '').toLowerCase();
+  // Get all jasa entries (type === 'jasa' or namaJasa present)
+  const jasaEntries = DB.priceEntries.filter(e =>
+    e.type === 'jasa' || (e.namaJasa && e.namaJasa.trim())
+  );
+
+  const el = document.getElementById('list-jasa');
+  if (!el) return;
+
+  if (!jasaEntries.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔧</div><div class="empty-text">Belum ada layanan jasa.<br>Tap + untuk tambah jasa baru.</div></div>`;
+    return;
+  }
+
+  // Group by namaJasa (case-insensitive)
+  const groups = {};
+  jasaEntries.forEach(e => {
+    const key = (e.namaJasa || '').trim().toLowerCase();
+    if (!key) return;
+    if (!groups[key]) groups[key] = { name: e.namaJasa.trim(), entries: [] };
+    groups[key].entries.push(e);
+  });
+
+  // Sort groups A-Z, filter by search
+  let groupList = Object.values(groups)
+    .filter(g => !q || g.name.toLowerCase().includes(q))
+    .sort((a,b) => a.name.localeCompare(b.name, 'id'));
+
+  if (!groupList.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Tidak ada hasil untuk pencarian ini.</div></div>`;
+    return;
+  }
+
+  el.innerHTML = groupList.map(g => {
+    // Sort entries cheapest first
+    const sorted = g.entries.sort((a,b) => a.harga - b.harga);
+    const best = sorted[0];
+    const bestSup = DB.suppliers.find(s => s.id === best.supplierId);
+
+    const rows = sorted.map(e => {
+      const sup = DB.suppliers.find(s => s.id === e.supplierId);
+      const isBest = e.id === best.id;
+      return `
+      <div class="jasa-compare-row ${isBest?'best':''}">
+        <span class="level-badge ${sup?.level === 'Jasa' ? 'jasa' : (sup?.level||'').toLowerCase()}" style="flex-shrink:0;font-size:9px">${sup?.level === 'Jasa' ? '🔧' : (sup?.level||'?')}</span>
+        <span class="jasa-compare-supplier">${sup?.name||'?'}</span>
+        <span class="jasa-compare-rate">Rp ${fmtNum(e.harga)}/${e.satuan||'project'}</span>
+        ${isBest ? '<span class="jasa-best-label">Terbaik</span>' : ''}
+        <span style="cursor:pointer;color:var(--red);font-size:10px;margin-left:4px;" onclick="event.stopPropagation();confirmDeletePrice('${e.id}')">✕</span>
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="jasa-card">
+      <div class="jasa-card-header">
+        <div class="jasa-card-name">${g.name}</div>
+        <div class="jasa-card-count">${g.entries.length} penyedia</div>
+      </div>
+      <div class="jasa-best-rate">Rp ${fmtNum(best.harga)}/${best.satuan||'project'}</div>
+      <div class="jasa-best-supplier">${bestSup?.name||'?'}</div>
+      ${g.entries.length > 1 ? `<div style="margin-top:10px;">${rows}</div>` : ''}
+      ${g.entries.length === 1 ? `<div style="margin-top:8px;">${rows}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
 function populateSupplierDropdowns() {
   const opts = '<option value="">Pilih supplier...</option>' +
     DB.suppliers.map(s => `<option value="${s.id}">${s.name} (${s.level})</option>`).join('');
-  ['f-price-supplier','f-pe-supplier'].forEach(id => {
+  ['f-price-supplier','f-pe-supplier','f-jasa-supplier'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = opts;
   });
@@ -977,14 +1125,15 @@ function openSupplierDetail(id) {
       ? '🔧 Jasa / Service Provider'
       : `${s.level} ${s.authorized ? '· ✓ Authorized' : ''}`;
 
-  const entries = DB.priceEntries.filter(e => e.supplierId === id);
-  const productIds = [...new Set(entries.map(e => e.productId))];
+  const allEntries = DB.priceEntries.filter(e => e.supplierId === id);
+  const produkEntries = allEntries.filter(e => !e.type || e.type === 'produk');
+  const jasaEntries = allEntries.filter(e => e.type === 'jasa' || e.namaJasa);
 
-  const priceCards = productIds.map(pid => {
-    const p = DB.products.find(x => x.id === pid);
-    const e = entries.filter(x => x.productId === pid).sort((a,b) => new Date(b.updatedAt)-new Date(a.updatedAt))[0];
+  // Produk section
+  const produkCards = produkEntries.map(e => {
+    const p = DB.products.find(x => x.id === e.productId);
     return `
-    <div class="detail-card" onclick="openProductDetail('${pid}')">
+    <div class="detail-card" onclick="openProductDetail('${e.productId}')">
       <div class="price-entry-row">
         <div class="price-entry-name">${p?.name||'?'}</div>
         <div class="price-entry-price">Rp ${fmtNum(e.harga)}</div>
@@ -993,7 +1142,21 @@ function openSupplierDetail(id) {
       ${e.moq ? `<div class="price-entry-moq">MOQ: ${e.moq}</div>` : ''}
       <div class="price-entry-moq">Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}</div>
     </div>`;
-  }).join('') || '<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">Belum ada produk dari supplier ini.</div></div>';
+  }).join('') || '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Belum ada produk.</div>';
+
+  // Jasa section
+  const jasaCards = jasaEntries.map(e => `
+    <div class="detail-card">
+      <div class="price-entry-row">
+        <div class="price-entry-name">${e.namaJasa||'?'}</div>
+        <div class="price-entry-price" style="color:var(--purple)">Rp ${fmtNum(e.harga)}</div>
+      </div>
+      <div class="price-entry-meta">${e.satuan||'per project'}</div>
+      ${e.catatan ? `<div class="price-entry-meta" style="margin-top:2px">${e.catatan}</div>` : ''}
+      <div class="price-entry-moq" style="margin-top:4px">Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}
+        <span style="margin-left:8px;cursor:pointer;color:var(--red);font-size:10px;" onclick="confirmDeletePrice('${e.id}')">Hapus</span>
+      </div>
+    </div>`).join('') || '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Belum ada layanan jasa.</div>';
 
   document.getElementById('supplier-detail-content').innerHTML = `
     <div class="detail-section">
@@ -1007,8 +1170,18 @@ function openSupplierDetail(id) {
       </div>
     </div>
     <div class="detail-section">
-      <div class="detail-section-title">Produk & Harga (${productIds.length})</div>
-      ${priceCards}
+      <div class="detail-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>📦 Produk (${produkEntries.length})</span>
+        <span style="font-size:18px;cursor:pointer;color:var(--accent)" onclick="openAddPrice('${id}')">+</span>
+      </div>
+      ${produkCards}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>🔧 Jasa (${jasaEntries.length})</span>
+        <span style="font-size:18px;cursor:pointer;color:var(--purple)" onclick="openAddJasa('${id}')">+</span>
+      </div>
+      ${jasaCards}
     </div>`;
 
   showScreen('screen-supplier-detail');
@@ -1277,6 +1450,69 @@ async function savePriceEntry() {
 }
 
 // ─────────────────────────────────────────
+// ADD JASA ENTRY
+// ─────────────────────────────────────────
+function openAddJasa(supplierId) {
+  clearForm(['f-jasa-nama','f-jasa-harga','f-jasa-catatan']);
+  document.getElementById('f-jasa-satuan').value = 'per project';
+  populateSupplierDropdowns();
+  if (supplierId) {
+    document.getElementById('f-jasa-supplier').value = supplierId;
+    document.getElementById('jasa-sheet-sub').textContent =
+      DB.suppliers.find(s => s.id === supplierId)?.name || 'supplier ini';
+  } else {
+    document.getElementById('f-jasa-supplier').value = '';
+    document.getElementById('jasa-sheet-sub').textContent = 'Data akan tersimpan ke Google Sheet';
+  }
+  openSheet('overlay-jasa');
+}
+
+async function saveJasaEntry() {
+  const supplierId = document.getElementById('f-jasa-supplier').value;
+  const namaJasa   = document.getElementById('f-jasa-nama').value.trim();
+  const hargaVal   = document.getElementById('f-jasa-harga').value;
+  if (!supplierId || !namaJasa || !hargaVal) {
+    showToast('Supplier, nama jasa & rate wajib diisi', 'error'); return;
+  }
+
+  const payload = {
+    id: genId(),
+    type: 'jasa',
+    namaJasa,
+    supplierId,
+    productId: '',
+    harga: parseFloat(hargaVal),
+    satuan: document.getElementById('f-jasa-satuan').value,
+    moq: null,
+    catatan: document.getElementById('f-jasa-catatan').value.trim(),
+    updatedBy: getUser().name,
+    updatedAt: new Date().toISOString()
+  };
+
+  closeSheet('overlay-jasa');
+  showLoading('Menyimpan jasa...');
+
+  try {
+    if (SCRIPT_URL) {
+      await api('addPrice', payload);
+      await fetchAll();
+    } else {
+      DB.priceEntries.push(payload);
+      saveToCache(); renderAll();
+    }
+    const sup = DB.suppliers.find(s => s.id === supplierId);
+    logActivity('Tambah Jasa', `${getUser().name} menambah jasa "${namaJasa}" dari ${sup?.name||''}: Rp ${fmtNum(payload.harga)}/${payload.satuan}`);
+    showToast('Layanan jasa ditambahkan ✓', 'success');
+    // Refresh supplier detail if open
+    if (currentSupplierId) openSupplierDetail(currentSupplierId);
+    // Re-render jasa tab
+    renderJasa();
+  } catch(e) {
+    showToast('Gagal: ' + e.message, 'error');
+  } finally { hideLoading(); }
+}
+
+// ─────────────────────────────────────────
 // DELETE
 // ─────────────────────────────────────────
 function confirmDeleteSupplier() {
@@ -1350,11 +1586,14 @@ function logActivity(action, detail) {
 // ─────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  ['suppliers','products','compare'].forEach(t => {
+  ['suppliers','products','jasa','compare'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
     document.getElementById('pane-'+t).style.display = t===tab ? '' : 'none';
   });
+  // FAB hidden on compare only
   document.getElementById('fab-btn').style.display = tab==='compare' ? 'none' : '';
+  // Render jasa when switching to it
+  if (tab === 'jasa') renderJasa();
 }
 
 function setLevelFilter(el, level) {

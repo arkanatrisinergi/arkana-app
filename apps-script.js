@@ -214,9 +214,10 @@ function addPrice(data) {
   const sheet = ss.getSheetByName(TABS.prices);
 
   sheet.appendRow([
-    data.id, data.productId, data.supplierId,
+    data.id, data.productId || '', data.supplierId,
     data.harga, data.moq || '',
-    data.catatan || '', data.updatedBy, data.updatedAt
+    data.catatan || '', data.updatedBy, data.updatedAt,
+    data.type || 'produk', data.namaJasa || ''
   ]);
 
   return { ok: true };
@@ -307,7 +308,7 @@ function ensureSheets(ss) {
   const tabDefs = {
     [TABS.suppliers]:  ['id','name','kontak','kota','level','units','authorized','catatan','createdBy','createdAt'],
     [TABS.products]:   ['id','name','category','satuan','catatan','createdBy','createdAt'],
-    [TABS.prices]:     ['id','productId','supplierId','harga','moq','catatan','updatedBy','updatedAt'],
+    [TABS.prices]:     ['id','productId','supplierId','harga','moq','catatan','updatedBy','updatedAt','type','namaJasa'],
     [TABS.log]:        ['timestamp','action','detail','user'],
     [TABS.settings]:   ['key','value']
   };
