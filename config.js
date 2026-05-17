@@ -5,4 +5,4 @@
 // ═══════════════════════════════════════════════════════════
 
 const ARKANA_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUnVqQe8slMTw0K16uRUYTjgkPmHHgmU0LKPlZcHER99hzGRGxptMsCnoIKUco8Lh2Og/exec';
-const APP_VERSION = 'v1.1.6';
+const APP_VERSION = 'v1.1.7';

@@ -155,6 +155,7 @@
   .l2 { background:rgba(59,130,246,.12); color:var(--l2); border:1px solid rgba(59,130,246,.2); }
   .l3 { background:rgba(16,185,129,.12); color:var(--l3); border:1px solid rgba(16,185,129,.2); }
   .l4 { background:rgba(107,114,128,.12); color:var(--l4); border:1px solid rgba(107,114,128,.2); }
+  .jasa { background:rgba(139,92,246,.12); color:var(--purple); border:1px solid rgba(139,92,246,.2); }
 
   .auth-badge {
     font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px;
@@ -465,6 +466,7 @@
         <div class="chip" onclick="setLevelFilter(this,'L2')">L2 Distributor</div>
         <div class="chip" onclick="setLevelFilter(this,'L3')">L3 Grosir</div>
         <div class="chip" onclick="setLevelFilter(this,'L4')">L4 Retail</div>
+        <div class="chip" onclick="setLevelFilter(this,'Jasa')">🔧 Jasa</div>
       </div>
       <!-- Unit bisnis filter -->
       <div class="filter-row" id="filter-unit" style="margin-bottom:8px;"></div>
@@ -555,6 +557,7 @@
         <option value="L2">L2 — Distributor Resmi</option>
         <option value="L3">L3 — Grosir / Subdistributor</option>
         <option value="L4">L4 — Retail</option>
+        <option value="Jasa">🔧 Jasa / Service Provider</option>
       </select>
     </div>
     <div class="form-group">
@@ -865,8 +868,8 @@ function renderSuppliers() {
         </div>
       </div>
       <div class="supplier-badges">
-        <span class="level-badge ${s.level.toLowerCase()}">${s.level}</span>
-        ${s.authorized ? '<span class="auth-badge">✓ Authorized</span>' : ''}
+        <span class="level-badge ${s.level === 'Jasa' ? 'jasa' : s.level.toLowerCase()}">${s.level === 'Jasa' ? '🔧 Jasa' : s.level}</span>
+        ${s.authorized && s.level !== 'Jasa' ? '<span class="auth-badge">✓ Authorized</span>' : ''}
         ${(s.units||[]).map(u=>`<span class="unit-badge">${u}</span>`).join('')}
       </div>
     </div>`;
@@ -969,7 +972,10 @@ function openSupplierDetail(id) {
   if (!s) return;
 
   document.getElementById('detail-supplier-name').textContent = s.name;
-  document.getElementById('detail-supplier-level').textContent = `${s.level} ${s.authorized ? '· ✓ Authorized' : ''}`;
+  document.getElementById('detail-supplier-level').textContent =
+    s.level === 'Jasa'
+      ? '🔧 Jasa / Service Provider'
+      : `${s.level} ${s.authorized ? '· ✓ Authorized' : ''}`;
 
   const entries = DB.priceEntries.filter(e => e.supplierId === id);
   const productIds = [...new Set(entries.map(e => e.productId))];
