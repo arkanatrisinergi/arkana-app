@@ -1020,7 +1020,8 @@ function renderSuppliers() {
 function renderProducts() {
   const q = document.getElementById('search-products').value.toLowerCase();
   let list = DB.products.filter(p =>
-    !q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q)
+    p.type !== 'jasa' &&
+    (!q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q))
   );
 
   const el = document.getElementById('list-products');
@@ -1029,23 +1030,7 @@ function renderProducts() {
     return;
   }
 
-  el.innerHTML = list.map(p => {
-    const entries = DB.priceEntries.filter(e => e.productId === p.id);
-    const bestPrice = entries.length ? Math.min(...entries.map(e=>e.harga)) : null;
-    const latest = entries.sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt))[0];
-    return `
-    <div class="product-card" onclick="openProductDetail('${p.id}')">
-      <div class="product-header">
-        <div class="product-name">${p.name}</div>
-        <div class="product-category">${p.category||'—'}</div>
-      </div>
-      <div class="product-price-row">
-        <div class="product-best-price">${bestPrice ? 'Rp '+fmtNum(bestPrice) : 'Belum ada harga'}</div>
-        <div class="product-supplier-count">${entries.length} supplier</div>
-      </div>
-      ${latest ? `<div class="product-updated">Update: ${fmtDate(latest.updatedAt)} · ${latest.updatedBy}</div>` : ''}
-    </div>`;
-  }).join('');
+  el.innerHTML = list.map(p => renderItemCard(p)).join('');
 }
 
 function renderCompare() {
@@ -1095,12 +1080,40 @@ function renderUnitChips() {
   ).join('');
 }
 
+// ─────────────────────────────────────────
+// REUSABLE ITEM CARD (Produk & Jasa)
+// ─────────────────────────────────────────
+function renderItemCard(p) {
+  const isJasa = p.type === 'jasa';
+  const entries = DB.priceEntries.filter(e => e.productId === p.id);
+  const bestPrice = entries.length ? Math.min(...entries.map(e => e.harga)) : null;
+  const latest = entries.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
+  const accentColor = isJasa ? 'var(--purple)' : 'var(--green)';
+  const satuan = p.satuan || (isJasa ? 'per project' : 'pcs');
+  const countLabel = isJasa ? 'penyedia' : 'supplier';
+  const onclick = isJasa ? `openJasaDetail('${p.id}')` : `openProductDetail('${p.id}')`;
+
+  return `
+  <div class="product-card" onclick="${onclick}">
+    <div class="product-header">
+      <div class="product-name">${p.name}</div>
+      <div class="product-category">${p.category||'—'}</div>
+    </div>
+    <div class="product-price-row">
+      <div class="product-best-price" style="color:${bestPrice ? accentColor : 'var(--text3)'}">
+        ${bestPrice ? 'Rp '+fmtNum(bestPrice)+'<span style="font-size:10px;font-weight:400;color:var(--muted)"> /'+satuan+'</span>' : 'Belum ada harga'}
+      </div>
+      <div class="product-supplier-count">${entries.length} ${countLabel}</div>
+    </div>
+    ${latest ? `<div class="product-updated">Update: ${fmtDate(latest.updatedAt)} · ${latest.updatedBy}</div>` : ''}
+  </div>`;
+}
+
 function renderJasa() {
   const q = (document.getElementById('search-jasa')?.value || '').toLowerCase();
   const el = document.getElementById('list-jasa');
   if (!el) return;
 
-  // Get all jasa items from Products table
   const jasaProducts = DB.products.filter(p =>
     p.type === 'jasa' &&
     (!q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q))
@@ -1111,24 +1124,7 @@ function renderJasa() {
     return;
   }
 
-  el.innerHTML = jasaProducts.map(p => {
-    const entries = DB.priceEntries.filter(e => e.productId === p.id)
-      .sort((a,b) => a.harga - b.harga);
-    const best = entries[0];
-    const bestSup = DB.suppliers.find(s => s.id === best?.supplierId);
-
-    return `
-    <div class="jasa-card" onclick="openJasaDetail('${p.id}')">
-      <div class="jasa-card-header">
-        <div class="jasa-card-name">${p.name}</div>
-        <div class="jasa-card-count">${entries.length} penyedia</div>
-      </div>
-      ${best ? `
-        <div class="jasa-best-rate">Rp ${fmtNum(best.harga)}/${best.satuan || p.satuan || 'project'}</div>
-        <div class="jasa-best-supplier">${bestSup?.name||'?'}</div>
-      ` : `<div class="jasa-best-supplier" style="color:var(--muted)">Belum ada harga</div>`}
-    </div>`;
-  }).join('');
+  el.innerHTML = jasaProducts.map(p => renderItemCard(p)).join('');
 }
 
 // ─────────────────────────────────────────
