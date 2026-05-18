@@ -561,6 +561,22 @@
     <div class="scroll-content" id="product-detail-content"></div>
   </div>
 
+  <!-- ══ JASA DETAIL SCREEN ══ -->
+  <div id="screen-jasa-detail" class="screen">
+    <div class="topbar">
+      <div class="back-btn" onclick="goBack('screen-main')">←</div>
+      <div style="flex:1">
+        <div class="topbar-title" id="detail-jasa-name">Layanan Jasa</div>
+        <div class="topbar-sub" id="detail-jasa-cat"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <div class="back-btn" onclick="openEditJasa()" style="background:var(--surface2)">✏️</div>
+        <div class="back-btn" onclick="confirmDeleteJasa()" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2)">🗑️</div>
+      </div>
+    </div>
+    <div class="scroll-content" id="jasa-detail-content"></div>
+  </div>
+
 </div>
 
 <!-- ══ ADD/EDIT SUPPLIER SHEET ══ -->
@@ -673,7 +689,7 @@
 <div class="overlay" id="overlay-price">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">Tambah Harga</div>
+    <div class="sheet-title" id="price-sheet-title">Tambah Harga</div>
     <div class="sheet-sub" id="price-sheet-sub">untuk produk ini</div>
 
     <div class="form-group">
@@ -681,12 +697,16 @@
       <select class="form-select" id="f-pe-supplier"></select>
     </div>
     <div class="form-group">
-      <label class="form-label">Harga Beli (Rp) *</label>
+      <label class="form-label">Harga / Rate (Rp) *</label>
       <input type="number" class="form-input" id="f-pe-harga" placeholder="0">
     </div>
-    <div class="form-group">
+    <div class="form-group" id="pe-moq-group">
       <label class="form-label">MOQ</label>
       <input type="number" class="form-input" id="f-pe-moq" placeholder="Minimum order qty">
+    </div>
+    <div class="form-group" id="pe-satuan-group">
+      <label class="form-label">Satuan</label>
+      <select class="form-select" id="f-pe-satuan"></select>
     </div>
     <div class="form-group">
       <label class="form-label">Catatan</label>
@@ -695,8 +715,33 @@
 
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="closeSheet('overlay-price')">Batal</button>
-      <button class="btn btn-primary" onclick="savePriceEntry()">Simpan</button>
+      <button class="btn btn-primary" id="price-save-btn" onclick="savePriceEntry()">Simpan</button>
     </div>
+  </div>
+</div>
+
+<!-- ══ SUPPLIER CONTACT OVERLAY ══ -->
+<div class="overlay" id="overlay-supplier-contact">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="contact-supplier-name">Supplier</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin:16px 0;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;">Kontak</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div id="contact-phone" style="font-size:16px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;"></div>
+          <a id="contact-wa-btn" href="#" target="_blank"
+            style="background:var(--green);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;">
+            💬 WhatsApp
+          </a>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;">Info</div>
+        <div id="contact-info" style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text2);"></div>
+      </div>
+    </div>
+    <button class="btn btn-secondary" onclick="closeSheet('overlay-supplier-contact')">Tutup</button>
   </div>
 </div>
 
@@ -720,19 +765,15 @@
     <div class="sheet-sub" id="jasa-sheet-sub">Data akan tersimpan ke Google Sheet</div>
 
     <div class="form-group">
-      <label class="form-label">Supplier *</label>
-      <select class="form-select" id="f-jasa-supplier"></select>
-    </div>
-    <div class="form-group">
       <label class="form-label">Nama Layanan *</label>
       <input type="text" class="form-input" id="f-jasa-nama" placeholder="e.g. Website Development, Jahit Seragam">
     </div>
     <div class="form-group">
-      <label class="form-label">Rate (Rp) *</label>
-      <input type="number" class="form-input" id="f-jasa-harga" placeholder="0">
+      <label class="form-label">Kategori Jasa</label>
+      <input type="text" class="form-input" id="f-jasa-category" placeholder="IT, Konveksi, Konstruksi, Event, dll.">
     </div>
     <div class="form-group">
-      <label class="form-label">Unit Rate *</label>
+      <label class="form-label">Unit Rate</label>
       <select class="form-select" id="f-jasa-satuan">
         <option value="per project">per project</option>
         <option value="per jam">per jam</option>
@@ -746,6 +787,13 @@
     <div class="form-group">
       <label class="form-label">Catatan / Scope</label>
       <textarea class="form-textarea" id="f-jasa-catatan" placeholder="Scope, deliverables, syarat, dll..."></textarea>
+    </div>
+    <div class="form-group" id="jasa-price-group">
+      <label class="form-label">Harga Awal (Opsional)</label>
+      <select class="form-select" id="f-jasa-supplier" style="margin-bottom:8px">
+        <option value="">Pilih supplier...</option>
+      </select>
+      <input type="number" class="form-input" id="f-jasa-harga" placeholder="Rate (Rp)">
     </div>
 
     <div class="btn-row">
@@ -1049,121 +1097,307 @@ function renderUnitChips() {
 
 function renderJasa() {
   const q = (document.getElementById('search-jasa')?.value || '').toLowerCase();
-  // Get all jasa entries (type === 'jasa' or namaJasa present)
-  const jasaEntries = DB.priceEntries.filter(e =>
-    e.type === 'jasa' || (e.namaJasa && e.namaJasa.trim())
-  );
-
   const el = document.getElementById('list-jasa');
   if (!el) return;
 
-  if (!jasaEntries.length) {
+  // Get all jasa items from Products table
+  const jasaProducts = DB.products.filter(p =>
+    p.type === 'jasa' &&
+    (!q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q))
+  ).sort((a,b) => a.name.localeCompare(b.name, 'id'));
+
+  if (!jasaProducts.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔧</div><div class="empty-text">Belum ada layanan jasa.<br>Tap + untuk tambah jasa baru.</div></div>`;
     return;
   }
 
-  // Group by namaJasa (case-insensitive)
-  const groups = {};
-  jasaEntries.forEach(e => {
-    const key = (e.namaJasa || '').trim().toLowerCase();
-    if (!key) return;
-    if (!groups[key]) groups[key] = { name: e.namaJasa.trim(), entries: [] };
-    groups[key].entries.push(e);
-  });
-
-  // Sort groups A-Z, filter by search
-  let groupList = Object.values(groups)
-    .filter(g => !q || g.name.toLowerCase().includes(q))
-    .sort((a,b) => a.name.localeCompare(b.name, 'id'));
-
-  if (!groupList.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Tidak ada hasil untuk pencarian ini.</div></div>`;
-    return;
-  }
-
-  el.innerHTML = groupList.map(g => {
-    // Sort entries cheapest first
-    const sorted = g.entries.sort((a,b) => a.harga - b.harga);
-    const best = sorted[0];
-    const bestSup = DB.suppliers.find(s => s.id === best.supplierId);
-
-    const rows = sorted.map(e => {
-      const sup = DB.suppliers.find(s => s.id === e.supplierId);
-      const isBest = e.id === best.id;
-      return `
-      <div class="jasa-compare-row ${isBest?'best':''}">
-        <span class="level-badge ${sup?.level === 'Jasa' ? 'jasa' : (sup?.level||'').toLowerCase()}" style="flex-shrink:0;font-size:9px">${sup?.level === 'Jasa' ? '🔧' : (sup?.level||'?')}</span>
-        <span class="jasa-compare-supplier">${sup?.name||'?'}</span>
-        <span class="jasa-compare-rate">Rp ${fmtNum(e.harga)}/${e.satuan||'project'}</span>
-        ${isBest ? '<span class="jasa-best-label">Terbaik</span>' : ''}
-        <span style="cursor:pointer;color:var(--red);font-size:10px;margin-left:4px;" onclick="event.stopPropagation();confirmDeletePrice('${e.id}')">✕</span>
-      </div>`;
-    }).join('');
+  el.innerHTML = jasaProducts.map(p => {
+    const entries = DB.priceEntries.filter(e => e.productId === p.id)
+      .sort((a,b) => a.harga - b.harga);
+    const best = entries[0];
+    const bestSup = DB.suppliers.find(s => s.id === best?.supplierId);
 
     return `
-    <div class="jasa-card" onclick="openJasaDetail('${encodeURIComponent(g.name)}')">
+    <div class="jasa-card" onclick="openJasaDetail('${p.id}')">
       <div class="jasa-card-header">
-        <div class="jasa-card-name">${g.name}</div>
-        <div class="jasa-card-count">${g.entries.length} penyedia</div>
+        <div class="jasa-card-name">${p.name}</div>
+        <div class="jasa-card-count">${entries.length} penyedia</div>
       </div>
-      <div class="jasa-best-rate">Rp ${fmtNum(best.harga)}/${best.satuan||'project'}</div>
-      <div class="jasa-best-supplier">${bestSup?.name||'?'}</div>
+      ${best ? `
+        <div class="jasa-best-rate">Rp ${fmtNum(best.harga)}/${best.satuan || p.satuan || 'project'}</div>
+        <div class="jasa-best-supplier">${bestSup?.name||'?'}</div>
+      ` : `<div class="jasa-best-supplier" style="color:var(--muted)">Belum ada harga</div>`}
     </div>`;
   }).join('');
 }
 
 // ─────────────────────────────────────────
-// JASA DETAIL SHEET
+// JASA DETAIL SCREEN
 // ─────────────────────────────────────────
-function openJasaDetail(encodedName) {
-  const namaJasa = decodeURIComponent(encodedName);
-  const entries = DB.priceEntries.filter(e =>
-    (e.type === 'jasa' || e.namaJasa) &&
-    (e.namaJasa||'').trim().toLowerCase() === namaJasa.trim().toLowerCase()
-  ).sort((a,b) => a.harga - b.harga);
+let currentJasaId = null;
 
+function openJasaDetail(productId) {
+  currentJasaId = productId;
+  const p = DB.products.find(x => x.id === productId);
+  if (!p) return;
+
+  document.getElementById('detail-jasa-name').textContent = p.name;
+  document.getElementById('detail-jasa-cat').textContent = `${p.category||''} · ${p.satuan||'per project'}`;
+
+  const entries = DB.priceEntries.filter(e => e.productId === productId)
+    .sort((a,b) => a.harga - b.harga);
   const bestPrice = entries[0]?.harga;
 
-  document.getElementById('jasa-detail-title').textContent = namaJasa;
-  document.getElementById('jasa-detail-count').textContent = `${entries.length} penyedia jasa`;
-
-  document.getElementById('jasa-detail-content').innerHTML = entries.map(e => {
-    const sup = DB.suppliers.find(s => s.id === e.supplierId);
+  const priceCards = entries.map(e => {
+    const s = DB.suppliers.find(x => x.id === e.supplierId);
     const isBest = e.harga === bestPrice;
     return `
-    <div class="detail-card" style="${isBest?'border-color:rgba(139,92,246,.35);':''}">
+    <div class="detail-card" style="${isBest?'border-color:rgba(139,92,246,.35);':''}" onclick="openSupplierContact('${s?.id}')">
       <div class="price-entry-row">
         <div>
-          <div class="price-entry-name">${sup?.name||'?'}
-            <span class="level-badge ${sup?.level==='Jasa'?'jasa':(sup?.level||'').toLowerCase()}" style="font-size:9px">${sup?.level==='Jasa'?'🔧':(sup?.level||'')}</span>
+          <div class="price-entry-name">${s?.name||'?'}
+            <span class="level-badge ${s?.level==='Jasa'?'jasa':(s?.level||'').toLowerCase()}" style="font-size:9px">${s?.level==='Jasa'?'🔧':(s?.level||'')}</span>
           </div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${sup?.kota||''}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${s?.kota||''}</div>
         </div>
-        <div style="text-align:right;">
+        <div style="text-align:right">
           <div class="price-entry-price" style="color:${isBest?'var(--purple)':'var(--text)'}">Rp ${fmtNum(e.harga)}</div>
-          <div style="font-size:10px;color:var(--muted);">${e.satuan||'per project'}</div>
-          ${isBest?'<div style="font-size:9px;color:var(--purple);">Terbaik</div>':''}
+          <div style="font-size:10px;color:var(--muted)">${e.satuan||p.satuan||'per project'}</div>
+          ${isBest?'<div style="font-size:9px;color:var(--purple)">Terbaik</div>':''}
         </div>
       </div>
-      ${e.catatan?`<div class="price-entry-meta" style="margin-top:6px;">${e.catatan}</div>`:''}
-      <div class="price-entry-moq" style="margin-top:6px;">
-        Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}
-        <span style="margin-left:8px;cursor:pointer;color:var(--red);font-size:10px;"
-          onclick="event.stopPropagation();closeSheet('overlay-jasa-detail');confirmDeletePrice('${e.id}')">Hapus</span>
+      ${e.catatan?`<div class="price-entry-meta" style="margin-top:6px">${e.catatan}</div>`:''}
+      <div class="price-entry-moq" style="margin-top:6px;display:flex;gap:12px;">
+        <span>Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}</span>
+        <span style="cursor:pointer;color:var(--accent);" onclick="event.stopPropagation();openUpdatePrice('${e.id}','${productId}')">Update Harga</span>
+        <span style="cursor:pointer;color:var(--red);" onclick="event.stopPropagation();confirmDeletePrice('${e.id}')">Hapus</span>
       </div>
     </div>`;
-  }).join('');
+  }).join('') || '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Belum ada harga.</div></div>';
 
-  // Add button pre-fills namaJasa
-  document.getElementById('jasa-detail-add-btn').onclick = () => {
-    closeSheet('overlay-jasa-detail');
-    openAddJasa(null);
-    setTimeout(() => {
-      document.getElementById('f-jasa-nama').value = namaJasa;
-    }, 100);
+  document.getElementById('jasa-detail-content').innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">Informasi Layanan</div>
+      <div class="detail-card">
+        <div class="detail-field"><div class="detail-field-label">Kategori</div><div class="detail-field-value">${p.category||'—'}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Unit Rate</div><div class="detail-field-value">${p.satuan||'—'}</div></div>
+        ${p.catatan?`<div class="detail-field"><div class="detail-field-label">Catatan / Scope</div><div class="detail-field-value">${p.catatan}</div></div>`:''}
+        <div class="detail-field"><div class="detail-field-label">Ditambahkan oleh</div><div class="detail-field-value">${p.createdBy||'—'} · ${fmtDate(p.createdAt)}</div></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Penyedia Jasa (${entries.length})</span>
+        <span style="font-size:18px;cursor:pointer;color:var(--purple)" onclick="openAddPriceForJasa('${productId}')">+</span>
+      </div>
+      ${priceCards}
+    </div>`;
+
+  showScreen('screen-jasa-detail');
+}
+
+function openEditJasa() {
+  const p = DB.products.find(x => x.id === currentJasaId);
+  if (!p) return;
+  document.getElementById('f-jasa-nama').value = p.name;
+  document.getElementById('f-jasa-category').value = p.category||'';
+  document.getElementById('f-jasa-satuan').value = p.satuan||'per project';
+  document.getElementById('f-jasa-catatan').value = p.catatan||'';
+  document.getElementById('f-jasa-supplier').value = '';
+  document.getElementById('f-jasa-harga').value = '';
+  document.getElementById('jasa-sheet-sub').textContent = 'Edit layanan jasa';
+  document.getElementById('jasa-price-group').style.display = 'none';
+  // Override save to update mode
+  document.querySelector('#overlay-jasa .btn-primary').onclick = saveJasaEdit;
+  openSheet('overlay-jasa');
+}
+
+async function saveJasaEdit() {
+  const p = DB.products.find(x => x.id === currentJasaId);
+  if (!p) return;
+  const name = document.getElementById('f-jasa-nama').value.trim();
+  if (!name) { showToast('Nama layanan wajib diisi', 'error'); return; }
+
+  const payload = {
+    id: currentJasaId,
+    name,
+    category: document.getElementById('f-jasa-category').value.trim(),
+    satuan: document.getElementById('f-jasa-satuan').value,
+    catatan: document.getElementById('f-jasa-catatan').value.trim(),
+    type: 'jasa',
+    createdBy: p.createdBy,
+    createdAt: p.createdAt
   };
 
-  openSheet('overlay-jasa-detail');
+  closeSheet('overlay-jasa');
+  // Restore save button
+  document.querySelector('#overlay-jasa .btn-primary').onclick = saveJasaEntry;
+  document.getElementById('jasa-price-group').style.display = '';
+  showLoading('Menyimpan...');
+
+  try {
+    if (SCRIPT_URL) { await api('updateProduct', { product: payload }); await fetchAll(); }
+    else {
+      const idx = DB.products.findIndex(x => x.id === currentJasaId);
+      if (idx >= 0) DB.products[idx] = payload;
+      saveToCache(); renderAll();
+    }
+    logActivity('Edit Jasa', `${getUser().name} mengedit layanan: ${name}`);
+    showToast('Layanan diperbarui ✓', 'success');
+    openJasaDetail(currentJasaId);
+  } catch(e) { showToast('Gagal: '+e.message,'error'); }
+  finally { hideLoading(); }
+}
+
+function confirmDeleteJasa() {
+  const p = DB.products.find(x => x.id === currentJasaId);
+  showConfirm('Hapus Layanan', `Hapus "${p?.name}"? Semua data harga juga akan dihapus.`, async () => {
+    showLoading('Menghapus...');
+    try {
+      if (SCRIPT_URL) { await api('deleteProduct', { id: currentJasaId }); await fetchAll(); }
+      else {
+        DB.products = DB.products.filter(x => x.id !== currentJasaId);
+        DB.priceEntries = DB.priceEntries.filter(x => x.productId !== currentJasaId);
+        saveToCache(); renderAll();
+      }
+      logActivity('Hapus Jasa', `${getUser().name} menghapus layanan: ${p?.name}`);
+      showToast('Layanan dihapus', 'success');
+      goBack('screen-main');
+    } catch(e) { showToast('Gagal: '+e.message,'error'); }
+    finally { hideLoading(); }
+  });
+}
+
+// ─────────────────────────────────────────
+// SUPPLIER CONTACT OVERLAY
+// ─────────────────────────────────────────
+function openSupplierContact(supplierId) {
+  const s = DB.suppliers.find(x => x.id === supplierId);
+  if (!s) return;
+
+  document.getElementById('contact-supplier-name').textContent = s.name;
+
+  const phone = String(s.kontak || '');
+  document.getElementById('contact-phone').textContent = phone || '—';
+
+  // Build WA link: strip non-digits, replace leading 0 with 62
+  const waBtn = document.getElementById('contact-wa-btn');
+  if (phone) {
+    const digits = phone.replace(/\D/g, '');
+    const waNumber = digits.startsWith('0') ? '62' + digits.slice(1) : digits;
+    waBtn.href = `https://wa.me/${waNumber}`;
+    waBtn.style.display = 'flex';
+  } else {
+    waBtn.style.display = 'none';
+  }
+
+  document.getElementById('contact-info').innerHTML = `
+    <div><span style="color:var(--muted)">Level:</span> ${s.level}</div>
+    <div><span style="color:var(--muted)">Kota:</span> ${s.kota||'—'}</div>
+    ${s.authorized ? '<div style="color:var(--green)">✓ Authorized / Ada SPD</div>' : ''}
+    ${(s.units||[]).length ? `<div><span style="color:var(--muted)">Unit:</span> ${s.units.join(', ')}</div>` : ''}
+    ${s.catatan ? `<div><span style="color:var(--muted)">Catatan:</span> ${s.catatan}</div>` : ''}
+  `;
+
+  openSheet('overlay-supplier-contact');
+}
+
+// ─────────────────────────────────────────
+// UPDATE PRICE (adds new row — keeps history)
+// ─────────────────────────────────────────
+let updatePriceEntryId = null;
+let updatePriceProductId = null;
+
+function openUpdatePrice(entryId, productId) {
+  const e = DB.priceEntries.find(x => x.id === entryId);
+  const p = DB.products.find(x => x.id === productId);
+  if (!e || !p) return;
+
+  updatePriceEntryId = entryId;
+  updatePriceProductId = productId;
+
+  document.getElementById('price-sheet-title').textContent = 'Update Harga';
+  document.getElementById('price-sheet-sub').textContent = `${p.name} · ${DB.suppliers.find(s=>s.id===e.supplierId)?.name||''}`;
+  document.getElementById('f-pe-supplier').value = e.supplierId;
+  document.getElementById('f-pe-supplier').disabled = true;
+  document.getElementById('f-pe-harga').value = e.harga;
+  document.getElementById('f-pe-moq').value = e.moq||'';
+  document.getElementById('f-pe-catatan').value = e.catatan||'';
+  document.getElementById('pe-satuan-group').style.display = 'none';
+
+  // Hide MOQ for jasa
+  document.getElementById('pe-moq-group').style.display = p.type === 'jasa' ? 'none' : '';
+
+  document.getElementById('price-save-btn').onclick = saveUpdatePrice;
+  openSheet('overlay-price');
+}
+
+async function saveUpdatePrice() {
+  const hargaVal = document.getElementById('f-pe-harga').value;
+  if (!hargaVal) { showToast('Harga wajib diisi', 'error'); return; }
+
+  const oldEntry = DB.priceEntries.find(x => x.id === updatePriceEntryId);
+  const payload = {
+    id: genId(), // NEW row — old row stays as history
+    productId: updatePriceProductId,
+    supplierId: oldEntry.supplierId,
+    harga: parseFloat(hargaVal),
+    moq: document.getElementById('f-pe-moq').value ? parseInt(document.getElementById('f-pe-moq').value) : null,
+    catatan: document.getElementById('f-pe-catatan').value.trim(),
+    updatedBy: getUser().name,
+    updatedAt: new Date().toISOString()
+  };
+
+  closeSheet('overlay-price');
+  document.getElementById('f-pe-supplier').disabled = false;
+  document.getElementById('price-save-btn').onclick = savePriceEntry;
+  document.getElementById('price-sheet-title').textContent = 'Tambah Harga';
+  showLoading('Menyimpan harga baru...');
+
+  try {
+    if (SCRIPT_URL) { await api('addPrice', payload); await fetchAll(); }
+    else { DB.priceEntries.push(payload); saveToCache(); renderAll(); }
+
+    const p = DB.products.find(x => x.id === updatePriceProductId);
+    const sup = DB.suppliers.find(s => s.id === oldEntry.supplierId);
+    logActivity('Update Harga', `${getUser().name} update harga ${p?.name||''} dari ${sup?.name||''}: Rp ${fmtNum(payload.harga)}`);
+    showToast('Harga diperbarui ✓', 'success');
+
+    if (p?.type === 'jasa') openJasaDetail(updatePriceProductId);
+    else openProductDetail(updatePriceProductId);
+  } catch(e) { showToast('Gagal: '+e.message,'error'); }
+  finally { hideLoading(); }
+}
+
+// ─────────────────────────────────────────
+// ADD PRICE FOR JASA (from jasa detail "+")
+// ─────────────────────────────────────────
+function openAddPriceForJasa(productId) {
+  const p = DB.products.find(x => x.id === productId);
+  priceEntryProductId = productId;
+
+  document.getElementById('price-sheet-title').textContent = 'Tambah Penyedia Jasa';
+  document.getElementById('price-sheet-sub').textContent = `untuk: ${p?.name||''}`;
+  document.getElementById('f-pe-supplier').value = '';
+  document.getElementById('f-pe-supplier').disabled = false;
+  document.getElementById('f-pe-harga').value = '';
+  document.getElementById('f-pe-moq').value = '';
+  document.getElementById('f-pe-catatan').value = '';
+  document.getElementById('pe-moq-group').style.display = 'none';
+
+  const satuanEl = document.getElementById('f-pe-satuan');
+  satuanEl.innerHTML = `
+    <option value="per project">per project</option>
+    <option value="per jam">per jam</option>
+    <option value="per hari">per hari</option>
+    <option value="per bulan">per bulan</option>
+    <option value="per m²">per m²</option>
+    <option value="per unit">per unit</option>
+    <option value="per pcs">per pcs</option>`;
+  satuanEl.value = p?.satuan || 'per project';
+
+  document.getElementById('price-save-btn').onclick = savePriceEntry;
+  openSheet('overlay-price');
 }
 
 function populateSupplierDropdowns() {
@@ -1190,8 +1424,14 @@ function openSupplierDetail(id) {
       : `${s.level} ${s.authorized ? '· ✓ Authorized' : ''}`;
 
   const allEntries = DB.priceEntries.filter(e => e.supplierId === id);
-  const produkEntries = allEntries.filter(e => !e.type || e.type === 'produk');
-  const jasaEntries = allEntries.filter(e => e.type === 'jasa' || e.namaJasa);
+  const produkEntries = allEntries.filter(e => {
+    const p = DB.products.find(x => x.id === e.productId);
+    return !p || p.type !== 'jasa';
+  });
+  const jasaEntries = allEntries.filter(e => {
+    const p = DB.products.find(x => x.id === e.productId);
+    return p && p.type === 'jasa';
+  });
 
   // Produk section
   const produkCards = produkEntries.map(e => {
@@ -1209,18 +1449,19 @@ function openSupplierDetail(id) {
   }).join('') || '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Belum ada produk.</div>';
 
   // Jasa section
-  const jasaCards = jasaEntries.map(e => `
-    <div class="detail-card">
+  const jasaCards = jasaEntries.map(e => {
+    const p = DB.products.find(x => x.id === e.productId);
+    return `
+    <div class="detail-card" onclick="openJasaDetail('${e.productId}')">
       <div class="price-entry-row">
-        <div class="price-entry-name">${e.namaJasa||'?'}</div>
+        <div class="price-entry-name">${p?.name||'?'}</div>
         <div class="price-entry-price" style="color:var(--purple)">Rp ${fmtNum(e.harga)}</div>
       </div>
-      <div class="price-entry-meta">${e.satuan||'per project'}</div>
+      <div class="price-entry-meta">${p?.satuan||'per project'}</div>
       ${e.catatan ? `<div class="price-entry-meta" style="margin-top:2px">${e.catatan}</div>` : ''}
-      <div class="price-entry-moq" style="margin-top:4px">Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}
-        <span style="margin-left:8px;cursor:pointer;color:var(--red);font-size:10px;" onclick="confirmDeletePrice('${e.id}')">Hapus</span>
-      </div>
-    </div>`).join('') || '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Belum ada layanan jasa.</div>';
+      <div class="price-entry-moq" style="margin-top:4px">Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}</div>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Belum ada layanan jasa.</div>';
 
   document.getElementById('supplier-detail-content').innerHTML = `
     <div class="detail-section">
@@ -1259,6 +1500,9 @@ function openProductDetail(id) {
   const p = DB.products.find(x => x.id === id);
   if (!p) return;
 
+  // If it's a jasa product, redirect to jasa detail screen
+  if (p.type === 'jasa') { openJasaDetail(id); return; }
+
   document.getElementById('detail-product-name').textContent = p.name;
   document.getElementById('detail-product-cat').textContent = `${p.category||''} · ${p.satuan||'pcs'}`;
 
@@ -1269,21 +1513,24 @@ function openProductDetail(id) {
     const s = DB.suppliers.find(x => x.id === e.supplierId);
     const isBest = e.harga === bestPrice;
     return `
-    <div class="detail-card" style="${isBest?'border-color:rgba(16,185,129,.3);':''}">
+    <div class="detail-card" style="${isBest?'border-color:rgba(16,185,129,.3);':''}" onclick="openSupplierContact('${s?.id}')">
       <div class="price-entry-row">
         <div>
-          <div class="price-entry-name">${s?.name||'?'} <span class="level-badge ${(s?.level||'').toLowerCase()}" style="font-size:9px">${s?.level||''}</span></div>
+          <div class="price-entry-name">${s?.name||'?'} <span class="level-badge ${s?.level==='Jasa'?'jasa':(s?.level||'').toLowerCase()}" style="font-size:9px">${s?.level||''}</span></div>
           ${s?.authorized ? '<div style="font-size:10px;color:var(--green);margin-top:2px;">✓ Authorized</div>' : ''}
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s?.kota||''}</div>
         </div>
-        <div>
+        <div style="text-align:right">
           <div class="price-entry-price" style="${isBest?'':'color:var(--text)'}">Rp ${fmtNum(e.harga)}</div>
-          ${isBest ? '<div style="font-size:9px;text-align:right;color:var(--green)">Terbaik</div>' : ''}
+          ${isBest ? '<div style="font-size:9px;color:var(--green)">Terbaik</div>' : ''}
         </div>
       </div>
       ${e.moq ? `<div class="price-entry-moq">MOQ: ${e.moq} ${p.satuan||'pcs'}</div>` : ''}
       ${e.catatan ? `<div class="price-entry-meta" style="margin-top:4px">${e.catatan}</div>` : ''}
-      <div class="price-entry-moq" style="margin-top:4px">Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}
-        <span style="margin-left:8px;cursor:pointer;color:var(--red);font-size:10px;" onclick="confirmDeletePrice('${e.id}')">Hapus</span>
+      <div class="price-entry-moq" style="margin-top:6px;display:flex;gap:12px;">
+        <span>Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}</span>
+        <span style="cursor:pointer;color:var(--accent);" onclick="event.stopPropagation();openUpdatePrice('${e.id}','${id}')">Update Harga</span>
+        <span style="cursor:pointer;color:var(--red);" onclick="event.stopPropagation();confirmDeletePrice('${e.id}')">Hapus</span>
       </div>
     </div>`;
   }).join('') || '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Belum ada harga.</div></div>';
@@ -1473,9 +1720,14 @@ async function saveProduct() {
 function openAddPrice(productId) {
   priceEntryProductId = productId;
   const p = DB.products.find(x => x.id === productId);
+  document.getElementById('price-sheet-title').textContent = 'Tambah Harga';
   document.getElementById('price-sheet-sub').textContent = `untuk: ${p?.name||''}`;
   clearForm(['f-pe-harga','f-pe-moq','f-pe-catatan']);
   document.getElementById('f-pe-supplier').value = '';
+  document.getElementById('f-pe-supplier').disabled = false;
+  document.getElementById('pe-moq-group').style.display = '';
+  document.getElementById('pe-satuan-group').style.display = 'none';
+  document.getElementById('price-save-btn').onclick = savePriceEntry;
   openSheet('overlay-price');
 }
 
@@ -1485,45 +1737,39 @@ async function savePriceEntry() {
   if (!supplierId || !hargaVal) { showToast('Supplier & harga wajib diisi', 'error'); return; }
 
   const payload = {
-    id: genId(), productId: priceEntryProductId, supplierId,
+    id: genId(),
+    productId: priceEntryProductId,
+    supplierId,
     harga: parseFloat(hargaVal),
     moq: document.getElementById('f-pe-moq').value ? parseInt(document.getElementById('f-pe-moq').value) : null,
     catatan: document.getElementById('f-pe-catatan').value.trim(),
-    updatedBy: getUser().name, updatedAt: new Date().toISOString()
+    updatedBy: getUser().name,
+    updatedAt: new Date().toISOString()
   };
 
   closeSheet('overlay-price');
   showLoading('Menyimpan harga...');
 
   try {
-    if (SCRIPT_URL) {
-      await api('addPrice', payload);
-      await fetchAll();
-    } else {
-      DB.priceEntries.push(payload);
-      saveToCache(); renderAll();
-    }
+    if (SCRIPT_URL) { await api('addPrice', payload); await fetchAll(); }
+    else { DB.priceEntries.push(payload); saveToCache(); renderAll(); }
     const sup = DB.suppliers.find(s => s.id === supplierId);
     const prod = DB.products.find(p => p.id === priceEntryProductId);
     logActivity('Tambah Harga', `${getUser().name} menambah harga ${prod?.name||''} dari ${sup?.name||''}: Rp ${fmtNum(payload.harga)}`);
     showToast('Harga ditambahkan ✓', 'success');
     if (currentProductId) openProductDetail(currentProductId);
-  } catch(e) {
-    showToast('Gagal: ' + e.message, 'error');
-  } finally { hideLoading(); }
+  } catch(e) { showToast('Gagal: ' + e.message, 'error'); }
+  finally { hideLoading(); }
 }
 
-// ─────────────────────────────────────────
-// ADD JASA ENTRY
-// ─────────────────────────────────────────
 function openAddJasa(supplierId) {
-  clearForm(['f-jasa-nama','f-jasa-harga','f-jasa-catatan']);
+  clearForm(['f-jasa-nama','f-jasa-category','f-jasa-harga','f-jasa-catatan']);
   document.getElementById('f-jasa-satuan').value = 'per project';
   populateSupplierDropdowns();
   if (supplierId) {
     document.getElementById('f-jasa-supplier').value = supplierId;
     document.getElementById('jasa-sheet-sub').textContent =
-      DB.suppliers.find(s => s.id === supplierId)?.name || 'supplier ini';
+      'Harga awal dari: ' + (DB.suppliers.find(s => s.id === supplierId)?.name || 'supplier ini');
   } else {
     document.getElementById('f-jasa-supplier').value = '';
     document.getElementById('jasa-sheet-sub').textContent = 'Data akan tersimpan ke Google Sheet';
@@ -1532,45 +1778,53 @@ function openAddJasa(supplierId) {
 }
 
 async function saveJasaEntry() {
-  const supplierId = document.getElementById('f-jasa-supplier').value;
-  const namaJasa   = document.getElementById('f-jasa-nama').value.trim();
-  const hargaVal   = document.getElementById('f-jasa-harga').value;
-  if (!supplierId || !namaJasa || !hargaVal) {
-    showToast('Supplier, nama jasa & rate wajib diisi', 'error'); return;
-  }
+  const namaJasa = document.getElementById('f-jasa-nama').value.trim();
+  if (!namaJasa) { showToast('Nama layanan wajib diisi', 'error'); return; }
 
-  const payload = {
+  const productPayload = {
     id: genId(),
-    type: 'jasa',
-    namaJasa,
-    supplierId,
-    productId: '',
-    harga: parseFloat(hargaVal),
+    name: namaJasa,
+    category: document.getElementById('f-jasa-category').value.trim(),
     satuan: document.getElementById('f-jasa-satuan').value,
-    moq: null,
     catatan: document.getElementById('f-jasa-catatan').value.trim(),
-    updatedBy: getUser().name,
-    updatedAt: new Date().toISOString()
+    type: 'jasa',
+    createdBy: getUser().name,
+    createdAt: new Date().toISOString()
   };
 
+  const supplierId = document.getElementById('f-jasa-supplier').value;
+  const hargaVal = document.getElementById('f-jasa-harga').value;
+  let pricePayload = null;
+  if (supplierId && hargaVal) {
+    pricePayload = {
+      id: genId(),
+      productId: productPayload.id,
+      supplierId,
+      harga: parseFloat(hargaVal),
+      moq: null,
+      satuan: productPayload.satuan,
+      catatan: '',
+      updatedBy: getUser().name,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
   closeSheet('overlay-jasa');
-  showLoading('Menyimpan jasa...');
+  showLoading('Menyimpan layanan jasa...');
 
   try {
     if (SCRIPT_URL) {
-      await api('addPrice', payload);
+      await api('addProduct', { product: productPayload, price: pricePayload });
       await fetchAll();
     } else {
-      DB.priceEntries.push(payload);
+      DB.products.push(productPayload);
+      if (pricePayload) DB.priceEntries.push(pricePayload);
       saveToCache(); renderAll();
     }
-    const sup = DB.suppliers.find(s => s.id === supplierId);
-    logActivity('Tambah Jasa', `${getUser().name} menambah jasa "${namaJasa}" dari ${sup?.name||''}: Rp ${fmtNum(payload.harga)}/${payload.satuan}`);
+    logActivity('Tambah Jasa', `${getUser().name} menambah layanan jasa: ${namaJasa}`);
     showToast('Layanan jasa ditambahkan ✓', 'success');
-    // Refresh supplier detail if open
-    if (currentSupplierId) openSupplierDetail(currentSupplierId);
-    // Re-render jasa tab
     renderJasa();
+    if (currentSupplierId) openSupplierDetail(currentSupplierId);
   } catch(e) {
     showToast('Gagal: ' + e.message, 'error');
   } finally { hideLoading(); }

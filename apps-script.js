@@ -108,6 +108,11 @@ function getAll() {
     e.moq = e.moq ? parseInt(e.moq) : null;
   });
 
+  // Ensure product type defaults to produk if blank
+  products.forEach(p => {
+    p.type = p.type || 'produk';
+  });
+
   return {
     ok: true,
     db: { suppliers, products, priceEntries, units: settings.units, settings }
@@ -172,6 +177,7 @@ function addProduct(body) {
   sheet.appendRow([
     data.id, data.name, data.category || '',
     data.satuan || 'pcs', data.catatan || '',
+    data.type || 'produk',
     data.createdBy, data.createdAt
   ]);
 
@@ -190,9 +196,10 @@ function updateProduct(body) {
   const rowIdx = findRow(sheet, data.id);
   if (rowIdx < 0) return { ok: false, error: 'Produk tidak ditemukan' };
 
-  sheet.getRange(rowIdx, 1, 1, 7).setValues([[
+  sheet.getRange(rowIdx, 1, 1, 8).setValues([[
     data.id, data.name, data.category || '',
     data.satuan || 'pcs', data.catatan || '',
+    data.type || 'produk',
     data.createdBy, data.createdAt
   ]]);
 
@@ -216,8 +223,7 @@ function addPrice(data) {
   sheet.appendRow([
     data.id, data.productId || '', data.supplierId,
     data.harga, data.moq || '',
-    data.catatan || '', data.updatedBy, data.updatedAt,
-    data.type || 'produk', data.namaJasa || ''
+    data.catatan || '', data.updatedBy, data.updatedAt
   ]);
 
   return { ok: true };
@@ -307,8 +313,8 @@ function defaultUnits() {
 function ensureSheets(ss) {
   const tabDefs = {
     [TABS.suppliers]:  ['id','name','kontak','kota','level','units','authorized','catatan','createdBy','createdAt'],
-    [TABS.products]:   ['id','name','category','satuan','catatan','createdBy','createdAt'],
-    [TABS.prices]:     ['id','productId','supplierId','harga','moq','catatan','updatedBy','updatedAt','type','namaJasa'],
+    [TABS.products]:   ['id','name','category','satuan','catatan','type','createdBy','createdAt'],
+    [TABS.prices]:     ['id','productId','supplierId','harga','moq','catatan','updatedBy','updatedAt'],
     [TABS.log]:        ['timestamp','action','detail','user'],
     [TABS.settings]:   ['key','value']
   };
