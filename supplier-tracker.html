@@ -401,6 +401,61 @@
   .price-entry-meta { font-size:11px; color:var(--text3); }
   .price-entry-moq { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); margin-top:2px; }
 
+  /* ── PRD-01.1 Price History ── */
+  .trend-badge {
+    display:inline-flex; align-items:center; gap:3px;
+    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600;
+    padding:2px 7px; border-radius:10px; flex-shrink:0; vertical-align:middle;
+  }
+  .trend-up   { background:rgba(239,68,68,.1);  color:var(--red);   border:1px solid rgba(239,68,68,.2); }
+  .trend-down { background:rgba(16,185,129,.1); color:var(--green); border:1px solid rgba(16,185,129,.2); }
+  .trend-stable { background:rgba(75,86,128,.1); color:var(--muted); border:1px solid rgba(75,86,128,.2); }
+
+  .history-toggle {
+    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600;
+    color:var(--accent); cursor:pointer; padding:2px 0; flex-shrink:0;
+    transition:opacity .15s;
+  }
+  .history-toggle:active { opacity:.6; }
+
+  .history-timeline {
+    margin-top:10px; background:var(--surface2); border-radius:10px;
+    border:1px solid var(--border); overflow:hidden;
+    display:none; /* toggled via JS */
+  }
+  .history-timeline.open { display:block; }
+
+  .history-row {
+    display:flex; align-items:center; gap:8px;
+    padding:9px 12px; border-bottom:1px solid var(--border);
+    position:relative;
+  }
+  .history-row:last-child { border-bottom:none; }
+  .history-row.latest { background:rgba(59,130,246,.04); }
+
+  .history-row-price {
+    font-size:13px; font-weight:700; color:var(--text); flex:1;
+  }
+  .history-row.latest .history-row-price { color:var(--accent); }
+
+  .history-row-meta {
+    font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted);
+    text-align:right; line-height:1.5;
+  }
+
+  .history-latest-tag {
+    font-size:9px; font-weight:700; color:var(--accent);
+    background:rgba(59,130,246,.1); border:1px solid rgba(59,130,246,.2);
+    padding:1px 6px; border-radius:8px; margin-left:4px; flex-shrink:0;
+  }
+
+  .history-del {
+    font-size:10px; color:var(--red); cursor:pointer; padding:2px 6px;
+    border-radius:6px; flex-shrink:0; font-family:'JetBrains Mono',monospace;
+    font-weight:500;
+  }
+  .history-del:active { background:rgba(239,68,68,.1); }
+
   /* ── Toast ── */
   .toast {
     position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px);
@@ -928,6 +983,112 @@ function loadFromCache() {
 }
 
 // ─────────────────────────────────────────
+// DATA HELPERS  (PRD-01.1 — reusable across modules)
+// ─────────────────────────────────────────
+
+/**
+ * Returns ONE active PriceEntry per supplier for a given productId.
+ * "Active" = the entry with the most recent updatedAt for that supplierId.
+ * This is the canonical source of truth for current prices.
+ * Used by: renderItemCard, openProductDetail, openJasaDetail,
+ *          openSupplierDetail, renderCompare, and future modules.
+ */
+function latestPricePerSupplier(productId) {
+  const map = {};
+  DB.priceEntries.forEach(e => {
+    if (e.productId !== productId) return;
+    const existing = map[e.supplierId];
+    if (!existing || new Date(e.updatedAt) > new Date(existing.updatedAt)) {
+      map[e.supplierId] = e;
+    }
+  });
+  return Object.values(map);
+}
+
+/**
+ * Returns ALL PriceEntries for a given productId + supplierId,
+ * sorted newest-first. This is the price history timeline.
+ */
+function priceHistoryForSupplier(productId, supplierId) {
+  return DB.priceEntries
+    .filter(e => e.productId === productId && e.supplierId === supplierId)
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+}
+
+/**
+ * Returns trend direction based on two most recent entries in a history array.
+ * Input: history array sorted newest-first (output of priceHistoryForSupplier).
+ * Returns: 'up' | 'down' | 'stable' | null (null = insufficient data)
+ */
+function getTrend(history) {
+  if (!history || history.length < 2) return null;
+  const latest = parseFloat(history[0].harga);
+  const prev   = parseFloat(history[1].harga);
+  if (latest > prev) return 'up';
+  if (latest < prev) return 'down';
+  return 'stable';
+}
+
+/**
+ * Renders a trend badge HTML string.
+ * Returns empty string if trend is null.
+ */
+function renderTrendBadge(trend) {
+  if (!trend) return '';
+  const map = {
+    up:     { cls:'trend-up',     icon:'↑', label:'Naik' },
+    down:   { cls:'trend-down',   icon:'↓', label:'Turun' },
+    stable: { cls:'trend-stable', icon:'→', label:'Stabil' }
+  };
+  const t = map[trend];
+  return `<span class="trend-badge ${t.cls}">${t.icon} ${t.label}</span>`;
+}
+
+/**
+ * Renders the expandable history timeline for one supplier row.
+ * panelId: unique DOM id for the collapsible div.
+ * history: array sorted newest-first.
+ * productId: used by delete to refresh the right screen after deletion.
+ * isJasa: drives color and type label.
+ */
+function renderHistoryTimeline(panelId, history, productId, isJasa) {
+  if (history.length < 2) return ''; // Only show if there's actual history
+  const accentColor = isJasa ? 'var(--purple)' : 'var(--green)';
+  const rows = history.map((e, idx) => {
+    const isLatest = idx === 0;
+    return `
+    <div class="history-row${isLatest ? ' latest' : ''}">
+      <div class="history-row-price">
+        Rp ${fmtNum(e.harga)}
+        ${isLatest ? `<span class="history-latest-tag" style="border-color:${isLatest && isJasa ? 'rgba(139,92,246,.3)' : ''};color:${isLatest && isJasa ? 'var(--purple)' : ''}">Terkini</span>` : ''}
+      </div>
+      <div class="history-row-meta">
+        ${fmtDate(e.updatedAt)}<br>${e.updatedBy||'—'}
+      </div>
+      ${!isLatest ? `<span class="history-del" onclick="event.stopPropagation();confirmDeletePrice('${e.id}','${productId}')">✕</span>` : ''}
+    </div>`;
+  }).join('');
+  return `
+  <div class="history-timeline" id="${panelId}">
+    ${rows}
+  </div>`;
+}
+
+/**
+ * Toggles the history timeline panel open/closed.
+ * Called from inline onclick in history toggle links.
+ */
+function toggleHistory(panelId, toggleId) {
+  const panel  = document.getElementById(panelId);
+  const toggle = document.getElementById(toggleId);
+  if (!panel) return;
+  const isOpen = panel.classList.toggle('open');
+  if (toggle) toggle.textContent = isOpen
+    ? '▲ Sembunyikan'
+    : `▼ ${panel.querySelectorAll('.history-row').length} riwayat`;
+}
+
+// ─────────────────────────────────────────
 // RENDER
 // ─────────────────────────────────────────
 function renderAll() {
@@ -1045,7 +1206,7 @@ function renderCompare() {
   const q = document.getElementById('search-compare').value.toLowerCase();
 
   const allWithEntries = DB.products.filter(p => {
-    const hasEntries = DB.priceEntries.some(e => e.productId === p.id);
+    const hasEntries = latestPricePerSupplier(p.id).length > 0;
     return hasEntries && (!q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q));
   });
 
@@ -1060,19 +1221,23 @@ function renderCompare() {
 
   function renderCompareCard(p) {
     const isJasa = p.type === 'jasa';
-    const entries = DB.priceEntries.filter(e => e.productId === p.id).sort((a,b) => a.harga - b.harga);
-    const bestPrice = entries[0]?.harga;
+    // Deduplicated: one active price per supplier, sorted cheapest first
+    const entries = latestPricePerSupplier(p.id).sort((a,b) => parseFloat(a.harga) - parseFloat(b.harga));
+    const bestPrice = entries[0] ? parseFloat(entries[0].harga) : null;
     const accentColor = isJasa ? 'var(--purple)' : 'var(--green)';
     const bestLabelColor = isJasa ? 'rgba(139,92,246,.12)' : 'rgba(16,185,129,.12)';
     const bestTextColor  = isJasa ? 'var(--purple)' : 'var(--green)';
 
     const rows = entries.map(e => {
       const sup = DB.suppliers.find(s => s.id === e.supplierId);
-      const isBest = e.harga === bestPrice;
+      const isBest = parseFloat(e.harga) === bestPrice;
+      const history = priceHistoryForSupplier(p.id, e.supplierId);
+      const trend = getTrend(history);
       return `
       <div class="compare-row ${isBest?'best':''}" style="${isBest?'border-color:'+accentColor+';background:'+bestLabelColor.replace(',.12',',0.05')+';':''}">
         <span class="level-badge ${sup?.level==='Jasa'?'jasa':(sup?.level||'').toLowerCase()}" style="flex-shrink:0">${sup?.level==='Jasa'?'🔧':(sup?.level||'?')}</span>
         <span class="compare-supplier-name">${sup?.name||'?'}</span>
+        ${trend ? renderTrendBadge(trend) : ''}
         <span class="compare-price" style="${isBest?'color:'+accentColor:''}">Rp ${fmtNum(e.harga)}</span>
         ${isBest ? `<span class="best-label" style="background:${bestLabelColor};color:${bestTextColor}">Terbaik</span>` : ''}
       </div>`;
@@ -1117,13 +1282,18 @@ function renderUnitChips() {
 // ─────────────────────────────────────────
 function renderItemCard(p) {
   const isJasa = p.type === 'jasa';
-  const entries = DB.priceEntries.filter(e => e.productId === p.id);
-  const bestPrice = entries.length ? Math.min(...entries.map(e => e.harga)) : null;
-  const latest = entries.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
+  // Use deduplicated active prices (one per supplier, newest wins)
+  const activeEntries = latestPricePerSupplier(p.id);
+  const bestPrice = activeEntries.length ? Math.min(...activeEntries.map(e => parseFloat(e.harga))) : null;
+  const bestEntry = activeEntries.find(e => parseFloat(e.harga) === bestPrice);
+  // Trend on the best-priced supplier's history
+  const bestHistory = bestEntry ? priceHistoryForSupplier(p.id, bestEntry.supplierId) : [];
+  const trend = getTrend(bestHistory);
   const accentColor = isJasa ? 'var(--purple)' : 'var(--green)';
   const satuan = p.satuan || (isJasa ? 'per project' : 'pcs');
-  const countLabel = 'supplier';
   const onclick = isJasa ? `openJasaDetail('${p.id}')` : `openProductDetail('${p.id}')`;
+  // Latest update: most recent across all active entries
+  const latestUpdate = activeEntries.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
 
   return `
   <div class="product-card" onclick="${onclick}">
@@ -1134,10 +1304,11 @@ function renderItemCard(p) {
     <div class="product-price-row">
       <div class="product-best-price" style="color:${bestPrice ? accentColor : 'var(--text3)'}">
         ${bestPrice ? 'Rp '+fmtNum(bestPrice)+'<span style="font-size:10px;font-weight:400;color:var(--muted)"> /'+satuan+'</span>' : 'Belum ada harga'}
+        ${trend ? ' '+renderTrendBadge(trend) : ''}
       </div>
-      <div class="product-supplier-count">${entries.length} ${countLabel}</div>
+      <div class="product-supplier-count">${activeEntries.length} supplier</div>
     </div>
-    ${latest ? `<div class="product-updated">Update: ${fmtDate(latest.updatedAt)} · ${latest.updatedBy}</div>` : ''}
+    ${latestUpdate ? `<div class="product-updated">Update: ${fmtDate(latestUpdate.updatedAt)} · ${latestUpdate.updatedBy}</div>` : ''}
   </div>`;
 }
 
@@ -1178,13 +1349,19 @@ function openJasaDetail(productId) {
   document.getElementById('detail-jasa-name').textContent = p.name;
   document.getElementById('detail-jasa-cat').textContent = `${p.category||''} · ${p.satuan||'per project'}`;
 
-  const entries = DB.priceEntries.filter(e => e.productId === productId)
-    .sort((a,b) => a.harga - b.harga);
-  const bestPrice = entries[0]?.harga;
+  // Active entries: one per supplier, sorted cheapest first
+  const activeEntries = latestPricePerSupplier(productId).sort((a,b) => parseFloat(a.harga) - parseFloat(b.harga));
+  const bestPrice = activeEntries[0] ? parseFloat(activeEntries[0].harga) : null;
 
-  const priceCards = entries.map(e => {
+  const priceCards = activeEntries.map(e => {
     const s = DB.suppliers.find(x => x.id === e.supplierId);
-    const isBest = e.harga === bestPrice;
+    const isBest = parseFloat(e.harga) === bestPrice;
+    const history = priceHistoryForSupplier(productId, e.supplierId);
+    const trend = getTrend(history);
+    const panelId  = `hist-panel-j-${e.supplierId}`;
+    const toggleId = `hist-toggle-j-${e.supplierId}`;
+    const histCount = history.length;
+
     return `
     <div class="detail-card" style="${isBest?'border-color:rgba(139,92,246,.35);':''}" onclick="openSupplierContact('${s?.id}')">
       <div class="price-entry-row">
@@ -1197,15 +1374,18 @@ function openJasaDetail(productId) {
         <div style="text-align:right">
           <div class="price-entry-price" style="color:${isBest?'var(--purple)':'var(--text)'}">Rp ${fmtNum(e.harga)}</div>
           <div style="font-size:10px;color:var(--muted)">${e.satuan||p.satuan||'per project'}</div>
-          ${isBest?'<div style="font-size:9px;color:var(--purple)">Terbaik</div>':''}
+          ${trend ? renderTrendBadge(trend) : ''}
+          ${isBest ? '<div style="font-size:9px;color:var(--purple);margin-top:2px;">Terbaik</div>' : ''}
         </div>
       </div>
-      ${e.catatan?`<div class="price-entry-meta" style="margin-top:6px">${e.catatan}</div>`:''}
-      <div class="price-entry-moq" style="margin-top:6px;display:flex;gap:12px;">
+      ${e.catatan ? `<div class="price-entry-meta" style="margin-top:6px">${e.catatan}</div>` : ''}
+      <div class="price-entry-moq" style="margin-top:6px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
         <span>Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}</span>
-        <span style="cursor:pointer;color:var(--accent);" onclick="event.stopPropagation();openUpdatePrice('${e.id}','${productId}')">Update Harga</span>
-        <span style="cursor:pointer;color:var(--red);" onclick="event.stopPropagation();confirmDeletePrice('${e.id}')">Hapus</span>
+        ${histCount >= 2 ? `<span class="history-toggle" id="${toggleId}" onclick="event.stopPropagation();toggleHistory('${panelId}','${toggleId}')">▼ ${histCount} riwayat</span>` : ''}
+        <span style="cursor:pointer;color:var(--accent);margin-left:auto;" onclick="event.stopPropagation();openUpdatePrice('${e.id}','${productId}')">Update Harga</span>
+        <span style="cursor:pointer;color:var(--red);" onclick="event.stopPropagation();confirmDeletePrice('${e.id}','${productId}')">Hapus</span>
       </div>
+      ${renderHistoryTimeline(panelId, history, productId, true)}
     </div>`;
   }).join('') || '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Belum ada harga.</div></div>';
 
@@ -1221,7 +1401,7 @@ function openJasaDetail(productId) {
     </div>
     <div class="detail-section">
       <div class="detail-section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>Penyedia Jasa (${entries.length})</span>
+        <span>Penyedia Jasa (${activeEntries.length})</span>
         <span style="font-size:18px;cursor:pointer;color:var(--purple)" onclick="openAddPriceForJasa('${productId}')">+</span>
       </div>
       ${priceCards}
@@ -1457,21 +1637,20 @@ function openSupplierDetail(id) {
       ? '🔧 Jasa / Service Provider'
       : `${s.level} ${s.authorized ? '· ✓ Authorized' : ''}`;
 
-  const allEntries = DB.priceEntries.filter(e => e.supplierId === id);
-  const produkEntries = allEntries.filter(e => {
-    const p = DB.products.find(x => x.id === e.productId);
-    return !p || p.type !== 'jasa';
-  });
-  const jasaEntries = allEntries.filter(e => {
-    const p = DB.products.find(x => x.id === e.productId);
-    return p && p.type === 'jasa';
-  });
+  // Get all products this supplier has ACTIVE prices for (one per product, newest wins)
+  const allActiveForSupplier = DB.products.reduce((acc, prod) => {
+    const active = latestPricePerSupplier(prod.id).find(e => e.supplierId === id);
+    if (active) acc.push({ product: prod, entry: active });
+    return acc;
+  }, []);
+
+  const produkEntries = allActiveForSupplier.filter(({product}) => product.type !== 'jasa');
+  const jasaEntries   = allActiveForSupplier.filter(({product}) => product.type === 'jasa');
 
   // Produk section
-  const produkCards = produkEntries.map(e => {
-    const p = DB.products.find(x => x.id === e.productId);
+  const produkCards = produkEntries.map(({product: p, entry: e}) => {
     return `
-    <div class="detail-card" onclick="openProductDetail('${e.productId}')">
+    <div class="detail-card" onclick="openProductDetail('${p.id}')">
       <div class="price-entry-row">
         <div class="price-entry-name">${p?.name||'?'}</div>
         <div class="price-entry-price">Rp ${fmtNum(e.harga)}</div>
@@ -1483,10 +1662,9 @@ function openSupplierDetail(id) {
   }).join('') || '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Belum ada produk.</div>';
 
   // Jasa section
-  const jasaCards = jasaEntries.map(e => {
-    const p = DB.products.find(x => x.id === e.productId);
+  const jasaCards = jasaEntries.map(({product: p, entry: e}) => {
     return `
-    <div class="detail-card" onclick="openJasaDetail('${e.productId}')">
+    <div class="detail-card" onclick="openJasaDetail('${p.id}')">
       <div class="price-entry-row">
         <div class="price-entry-name">${p?.name||'?'}</div>
         <div class="price-entry-price" style="color:var(--purple)">Rp ${fmtNum(e.harga)}</div>
@@ -1540,12 +1718,19 @@ function openProductDetail(id) {
   document.getElementById('detail-product-name').textContent = p.name;
   document.getElementById('detail-product-cat').textContent = `${p.category||''} · ${p.satuan||'pcs'}`;
 
-  const entries = DB.priceEntries.filter(e => e.productId === id).sort((a,b) => a.harga - b.harga);
-  const bestPrice = entries[0]?.harga;
+  // Active entries: one per supplier, sorted cheapest first
+  const activeEntries = latestPricePerSupplier(id).sort((a,b) => parseFloat(a.harga) - parseFloat(b.harga));
+  const bestPrice = activeEntries[0] ? parseFloat(activeEntries[0].harga) : null;
 
-  const priceCards = entries.map(e => {
+  const priceCards = activeEntries.map(e => {
     const s = DB.suppliers.find(x => x.id === e.supplierId);
-    const isBest = e.harga === bestPrice;
+    const isBest = parseFloat(e.harga) === bestPrice;
+    const history = priceHistoryForSupplier(id, e.supplierId);
+    const trend = getTrend(history);
+    const panelId  = `hist-panel-${e.supplierId}`;
+    const toggleId = `hist-toggle-${e.supplierId}`;
+    const histCount = history.length;
+
     return `
     <div class="detail-card" style="${isBest?'border-color:rgba(16,185,129,.3);':''}" onclick="openSupplierContact('${s?.id}')">
       <div class="price-entry-row">
@@ -1556,16 +1741,19 @@ function openProductDetail(id) {
         </div>
         <div style="text-align:right">
           <div class="price-entry-price" style="${isBest?'':'color:var(--text)'}">Rp ${fmtNum(e.harga)}</div>
-          ${isBest ? '<div style="font-size:9px;color:var(--green)">Terbaik</div>' : ''}
+          ${trend ? renderTrendBadge(trend) : ''}
+          ${isBest ? '<div style="font-size:9px;color:var(--green);margin-top:2px;">Terbaik</div>' : ''}
         </div>
       </div>
       ${e.moq ? `<div class="price-entry-moq">MOQ: ${e.moq} ${p.satuan||'pcs'}</div>` : ''}
       ${e.catatan ? `<div class="price-entry-meta" style="margin-top:4px">${e.catatan}</div>` : ''}
-      <div class="price-entry-moq" style="margin-top:6px;display:flex;gap:12px;">
+      <div class="price-entry-moq" style="margin-top:6px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
         <span>Update: ${fmtDate(e.updatedAt)} · ${e.updatedBy}</span>
-        <span style="cursor:pointer;color:var(--accent);" onclick="event.stopPropagation();openUpdatePrice('${e.id}','${id}')">Update Harga</span>
-        <span style="cursor:pointer;color:var(--red);" onclick="event.stopPropagation();confirmDeletePrice('${e.id}')">Hapus</span>
+        ${histCount >= 2 ? `<span class="history-toggle" id="${toggleId}" onclick="event.stopPropagation();toggleHistory('${panelId}','${toggleId}')">▼ ${histCount} riwayat</span>` : ''}
+        <span style="cursor:pointer;color:var(--accent);margin-left:auto;" onclick="event.stopPropagation();openUpdatePrice('${e.id}','${id}')">Update Harga</span>
+        <span style="cursor:pointer;color:var(--red);" onclick="event.stopPropagation();confirmDeletePrice('${e.id}','${id}')">Hapus</span>
       </div>
+      ${renderHistoryTimeline(panelId, history, id, false)}
     </div>`;
   }).join('') || '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Belum ada harga.</div></div>';
 
@@ -1581,7 +1769,7 @@ function openProductDetail(id) {
     </div>
     <div class="detail-section">
       <div class="detail-section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>Harga dari Supplier (${entries.length})</span>
+        <span>Harga dari Supplier (${activeEntries.length})</span>
         <span style="font-size:18px;cursor:pointer;color:var(--accent)" onclick="openAddPrice('${id}')">+</span>
       </div>
       ${priceCards}
@@ -1905,7 +2093,7 @@ function confirmDeleteProduct() {
   });
 }
 
-function confirmDeletePrice(priceId) {
+function confirmDeletePrice(priceId, productId) {
   showConfirm('Hapus Harga', 'Hapus data harga ini?', async () => {
     showLoading('Menghapus...');
     try {
@@ -1916,7 +2104,13 @@ function confirmDeletePrice(priceId) {
       }
       logActivity('Hapus Harga', `${getUser().name} menghapus data harga`);
       showToast('Harga dihapus', 'success');
-      if (currentProductId) openProductDetail(currentProductId);
+      // Refresh the correct detail screen
+      const pid = productId || currentProductId;
+      if (pid) {
+        const p = DB.products.find(x => x.id === pid);
+        if (p?.type === 'jasa') openJasaDetail(pid);
+        else openProductDetail(pid);
+      }
     } catch(e) { showToast('Gagal: '+e.message,'error'); }
     finally { hideLoading(); }
   });

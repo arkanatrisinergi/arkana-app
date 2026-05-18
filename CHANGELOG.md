@@ -2,6 +2,26 @@
 
 ---
 
+## v1.4.0 — PRD-01.1 Price History
+**Files:** `config.js`, `supplier-tracker.html`
+
+- feat: `latestPricePerSupplier(productId)` — deduplicates PriceEntries to one active price per supplier (newest updatedAt wins); used as canonical price source across all views
+- feat: `priceHistoryForSupplier(productId, supplierId)` — returns full price history for a supplier+product pair, sorted newest-first
+- feat: `getTrend(history)` — computes trend direction (up/down/stable) from two most recent entries
+- feat: `renderTrendBadge(trend)` — renders ↑↓→ colored badge; reusable by future modules
+- feat: `renderHistoryTimeline(...)` — renders collapsible history panel per supplier row (only shown if 2+ entries exist)
+- feat: `toggleHistory(panelId, toggleId)` — expand/collapse handler with live label update
+- feat: Trend badge shown on best price in Produk and Jasa card list
+- feat: Trend badge shown per supplier row in Produk detail, Jasa detail, and Komparasi tab
+- feat: History expand/collapse toggle ("▼ N riwayat") per supplier row in Produk and Jasa detail screens
+- feat: History timeline shows all past prices newest-first with date, updatedBy, and delete button (latest entry protected from deletion)
+- fix: Produk and Jasa detail screens now show one card per supplier (active price only) instead of raw all-entry list
+- fix: Komparasi tab now uses deduplicated active prices — best price and ranking are accurate
+- fix: Supplier detail screen now shows one row per product (latest price only, no duplicate history rows)
+- fix: `confirmDeletePrice` now accepts productId and refreshes the correct detail screen (Produk or Jasa) — previously always refreshed Produk screen
+
+---
+
 ## v1.2.0 — PRD-01.2 Produk vs Jasa Entry Typing
 **Files:** `config.js`, `supplier-tracker.html`, `apps-script.js`
 
