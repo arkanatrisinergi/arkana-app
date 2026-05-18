@@ -1025,51 +1025,83 @@ function renderProducts() {
   );
 
   const el = document.getElementById('list-products');
+  const total = DB.products.filter(p => p.type !== 'jasa').length;
+
+  // Stats bar
+  const statsHtml = `<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+    <div class="stat-chip">Total: <span>${total}</span></div>
+    ${q && list.length !== total ? `<div class="stat-chip">Filter: <span>${list.length}</span></div>` : ''}
+  </div>`;
+
   if (!list.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">Belum ada produk.<br>Tap + untuk tambah produk baru.</div></div>`;
+    el.innerHTML = statsHtml + `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">Belum ada produk.<br>Tap + untuk tambah produk baru.</div></div>`;
     return;
   }
 
-  el.innerHTML = list.map(p => renderItemCard(p)).join('');
+  el.innerHTML = statsHtml + list.map(p => renderItemCard(p)).join('');
 }
 
 function renderCompare() {
   const q = document.getElementById('search-compare').value.toLowerCase();
-  let list = DB.products.filter(p => {
+
+  const allWithEntries = DB.products.filter(p => {
     const hasEntries = DB.priceEntries.some(e => e.productId === p.id);
     return hasEntries && (!q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q));
   });
 
   const el = document.getElementById('list-compare');
-  if (!list.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚖️</div><div class="empty-text">Belum ada data harga untuk dibandingkan.<br>Tambah produk + harga dari tab Produk.</div></div>`;
+  if (!allWithEntries.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚖️</div><div class="empty-text">Belum ada data harga untuk dibandingkan.<br>Tambah produk atau jasa + harga dari tab Produk / Jasa.</div></div>`;
     return;
   }
 
-  el.innerHTML = list.map(p => {
-    const entries = DB.priceEntries.filter(e => e.productId === p.id)
-      .sort((a,b) => a.harga - b.harga);
+  const produkList = allWithEntries.filter(p => p.type !== 'jasa');
+  const jasaList   = allWithEntries.filter(p => p.type === 'jasa');
+
+  function renderCompareCard(p) {
+    const isJasa = p.type === 'jasa';
+    const entries = DB.priceEntries.filter(e => e.productId === p.id).sort((a,b) => a.harga - b.harga);
     const bestPrice = entries[0]?.harga;
+    const accentColor = isJasa ? 'var(--purple)' : 'var(--green)';
+    const bestLabelColor = isJasa ? 'rgba(139,92,246,.12)' : 'rgba(16,185,129,.12)';
+    const bestTextColor  = isJasa ? 'var(--purple)' : 'var(--green)';
 
     const rows = entries.map(e => {
       const sup = DB.suppliers.find(s => s.id === e.supplierId);
       const isBest = e.harga === bestPrice;
       return `
-      <div class="compare-row ${isBest?'best':''}">
-        <span class="level-badge ${(sup?.level||'').toLowerCase()}" style="flex-shrink:0">${sup?.level||'?'}</span>
+      <div class="compare-row ${isBest?'best':''}" style="${isBest?'border-color:'+accentColor+';background:'+bestLabelColor.replace(',.12',',0.05')+';':''}">
+        <span class="level-badge ${sup?.level==='Jasa'?'jasa':(sup?.level||'').toLowerCase()}" style="flex-shrink:0">${sup?.level==='Jasa'?'🔧':(sup?.level||'?')}</span>
         <span class="compare-supplier-name">${sup?.name||'?'}</span>
-        <span class="compare-price">Rp ${fmtNum(e.harga)}</span>
-        ${isBest ? '<span class="best-label">Terbaik</span>' : ''}
+        <span class="compare-price" style="${isBest?'color:'+accentColor:''}">Rp ${fmtNum(e.harga)}</span>
+        ${isBest ? `<span class="best-label" style="background:${bestLabelColor};color:${bestTextColor}">Terbaik</span>` : ''}
       </div>`;
     }).join('');
 
     return `
-    <div class="compare-card" onclick="openProductDetail('${p.id}')">
-      <div class="compare-name">${p.name}</div>
+    <div class="compare-card" onclick="${isJasa?`openJasaDetail('${p.id}')`:`openProductDetail('${p.id}')`}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <div class="compare-name">${p.name}</div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 7px;border-radius:10px;background:${isJasa?'rgba(139,92,246,.1)':'rgba(59,130,246,.1)'};color:${isJasa?'var(--purple)':'var(--accent)'};border:1px solid ${isJasa?'rgba(139,92,246,.2)':'rgba(59,130,246,.2)'};white-space:nowrap;flex-shrink:0;margin-left:8px;">${isJasa?'🔧 Jasa':'📦 Produk'}</span>
+      </div>
       <div class="compare-cat">${p.category||''} · ${p.satuan||'pcs'}</div>
-      <div class="compare-suppliers">${rows}</div>
+      <div class="compare-suppliers" style="margin-top:10px;">${rows}</div>
     </div>`;
-  }).join('');
+  }
+
+  let html = '';
+
+  if (produkList.length) {
+    html += `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:10px;margin-top:4px;">📦 Produk (${produkList.length})</div>`;
+    html += produkList.map(p => renderCompareCard(p)).join('');
+  }
+
+  if (jasaList.length) {
+    html += `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:10px;margin-top:${produkList.length?'20px':'4px'};">🔧 Jasa (${jasaList.length})</div>`;
+    html += jasaList.map(p => renderCompareCard(p)).join('');
+  }
+
+  el.innerHTML = html;
 }
 
 function renderUnitChips() {
@@ -1090,7 +1122,7 @@ function renderItemCard(p) {
   const latest = entries.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
   const accentColor = isJasa ? 'var(--purple)' : 'var(--green)';
   const satuan = p.satuan || (isJasa ? 'per project' : 'pcs');
-  const countLabel = isJasa ? 'penyedia' : 'supplier';
+  const countLabel = 'supplier';
   const onclick = isJasa ? `openJasaDetail('${p.id}')` : `openProductDetail('${p.id}')`;
 
   return `
@@ -1114,17 +1146,23 @@ function renderJasa() {
   const el = document.getElementById('list-jasa');
   if (!el) return;
 
+  const total = DB.products.filter(p => p.type === 'jasa').length;
   const jasaProducts = DB.products.filter(p =>
     p.type === 'jasa' &&
     (!q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q))
   ).sort((a,b) => a.name.localeCompare(b.name, 'id'));
 
+  const statsHtml = `<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+    <div class="stat-chip">Total: <span>${total}</span></div>
+    ${q && jasaProducts.length !== total ? `<div class="stat-chip">Filter: <span>${jasaProducts.length}</span></div>` : ''}
+  </div>`;
+
   if (!jasaProducts.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔧</div><div class="empty-text">Belum ada layanan jasa.<br>Tap + untuk tambah jasa baru.</div></div>`;
+    el.innerHTML = statsHtml + `<div class="empty-state"><div class="empty-icon">🔧</div><div class="empty-text">Belum ada layanan jasa.<br>Tap + untuk tambah jasa baru.</div></div>`;
     return;
   }
 
-  el.innerHTML = jasaProducts.map(p => renderItemCard(p)).join('');
+  el.innerHTML = statsHtml + jasaProducts.map(p => renderItemCard(p)).join('');
 }
 
 // ─────────────────────────────────────────
