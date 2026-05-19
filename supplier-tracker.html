@@ -1070,8 +1070,74 @@ function renderHistoryTimeline(panelId, history, productId, isJasa) {
   }).join('');
   return `
   <div class="history-timeline" id="${panelId}">
+    <div style="padding:10px 12px 0;">${renderPriceChart(history)}</div>
     ${rows}
   </div>`;
+}
+
+/**
+ * Renders an inline SVG line chart for a price history array.
+ * Input: history array sorted newest-first (output of priceHistoryForSupplier).
+ * Chart renders oldest→newest left to right.
+ * Returns SVG string, or '' if fewer than 2 entries.
+ */
+function renderPriceChart(history) {
+  if (!history || history.length < 2) return '';
+
+  // Reverse to chronological order for chart (oldest left, newest right)
+  const chrono = [...history].reverse();
+  const prices = chrono.map(e => parseFloat(e.harga));
+  const dates  = chrono.map(e => fmtDateShort(e.updatedAt));
+
+  const W = 280, H = 72, padX = 28, padY = 12;
+  const chartW = W - padX * 2;
+  const chartH = H - padY * 2;
+
+  const minP = Math.min(...prices);
+  const maxP = Math.max(...prices);
+  const range = maxP - minP || 1; // avoid div by zero if all prices equal
+
+  // Map price to Y (higher price = lower Y value = higher on chart)
+  const toY = p => padY + chartH - ((p - minP) / range) * chartH;
+  const toX = i => padX + (i / (chrono.length - 1)) * chartW;
+
+  const points = chrono.map((_, i) => `${toX(i)},${toY(prices[i])}`).join(' ');
+  // Closed area path: line points + bottom-right + bottom-left
+  const areaPath = `M ${points.split(' ').join(' L ')} L ${toX(chrono.length-1)},${H-padY+4} L ${toX(0)},${H-padY+4} Z`;
+
+  const dotRadius = 3;
+  const dots = chrono.map((_, i) => {
+    const isLatest = i === chrono.length - 1;
+    return isLatest
+      ? `<circle cx="${toX(i)}" cy="${toY(prices[i])}" r="4.5" fill="var(--accent)"/>`
+      : `<circle cx="${toX(i)}" cy="${toY(prices[i])}" r="${dotRadius}" fill="var(--surface2)" stroke="var(--border2)" stroke-width="1.5"/>`;
+  }).join('');
+
+  // Date labels: always show first and last; middle only if 3+ points and space allows
+  const labelIndices = chrono.length <= 3
+    ? chrono.map((_,i) => i)
+    : [0, chrono.length - 1];
+
+  const labels = labelIndices.map(i => {
+    const anchor = i === 0 ? 'start' : i === chrono.length - 1 ? 'end' : 'middle';
+    return `<text x="${toX(i)}" y="${H}" text-anchor="${anchor}" font-size="8" fill="var(--muted)" font-family="'JetBrains Mono',monospace">${dates[i]}</text>`;
+  }).join('');
+
+  const gradId = `cg${Math.random().toString(36).slice(2,7)}`;
+
+  return `
+  <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:64px;display:block;margin-bottom:10px;overflow:visible;">
+    <defs>
+      <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${areaPath}" fill="url(#${gradId})"/>
+    <polyline points="${points}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    ${labels}
+  </svg>`;
 }
 
 /**
@@ -1154,12 +1220,27 @@ function renderSuppliers() {
     return;
   }
 
+  // Build reverse lookup: supplierId → { produk: N, jasa: N }
+  // Computed once here (not per card) for performance — O(products × entries)
+  const supplierCountMap = {};
+  DB.products.forEach(p => {
+    latestPricePerSupplier(p.id).forEach(e => {
+      if (!supplierCountMap[e.supplierId]) supplierCountMap[e.supplierId] = { produk: 0, jasa: 0 };
+      if (p.type === 'jasa') supplierCountMap[e.supplierId].jasa++;
+      else supplierCountMap[e.supplierId].produk++;
+    });
+  });
+
   el.innerHTML = list.map(s => {
     const initials = s.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
     const colors = ['linear-gradient(135deg,#1D4ED8,#3B82F6)','linear-gradient(135deg,#065F46,#10B981)','linear-gradient(135deg,#7C3AED,#8B5CF6)','linear-gradient(135deg,#B45309,#F59E0B)'];
     const color = colors[s.name.charCodeAt(0) % colors.length];
-    // Ensure phone displayed as string (preserve leading zero)
     const phone = s.kontak ? String(s.kontak) : '—';
+    const counts = supplierCountMap[s.id] || { produk: 0, jasa: 0 };
+    const countChips = [
+      counts.produk > 0 ? `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(59,130,246,.08);color:var(--accent);border:1px solid rgba(59,130,246,.18);font-weight:500;">📦 ${counts.produk} produk</span>` : '',
+      counts.jasa   > 0 ? `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(139,92,246,.08);color:var(--purple);border:1px solid rgba(139,92,246,.18);font-weight:500;">🔧 ${counts.jasa} jasa</span>` : ''
+    ].filter(Boolean).join('');
     return `
     <div class="supplier-card" onclick="openSupplierDetail('${s.id}')">
       <div class="supplier-card-top">
@@ -1174,6 +1255,7 @@ function renderSuppliers() {
         ${s.authorized && s.level !== 'Jasa' ? '<span class="auth-badge">✓ Authorized</span>' : ''}
         ${(s.units||[]).map(u=>`<span class="unit-badge">${u}</span>`).join('')}
       </div>
+      ${countChips ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${countChips}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -2221,6 +2303,13 @@ function fmtDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear().toString().substr(2)} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+// Compact date for chart labels: "18/05"
+function fmtDateShort(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}`;
 }
 
 // Close overlays on background tap
