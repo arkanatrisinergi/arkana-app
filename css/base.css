@@ -343,7 +343,7 @@ html, body {
    Shrink state toggled by JS via .topbar-shrunk on .frost-bar. */
 .topbar {
   display: grid;
-  grid-template-columns: 32px 1fr 32px;
+  grid-template-columns: 48px 1fr 48px;
   align-items: center;
   gap: 8px;
   padding: max(env(safe-area-inset-top), 44px) 14px 8px;
@@ -373,8 +373,8 @@ html, body {
 /* ── Back Button (PRD-00.4-B) ── */
 /* Ghost style: no background, no border. Chevron only. */
 .back-btn {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-md);
   background: transparent;
   border: none;
@@ -384,7 +384,7 @@ html, body {
   cursor: pointer;
   flex-shrink: 0;
   color: var(--color-accent);
-  font-size: 20px;
+  font-size: 32px;
   line-height: 1;
   padding: 0;
   transition: opacity var(--duration-fast) var(--ease-standard);
@@ -394,8 +394,8 @@ html, body {
 
 /* Right slot — same size as back-btn, for action icons in detail screens */
 .topbar-action {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-md);
   background: transparent;
   border: none;
@@ -405,7 +405,7 @@ html, body {
   cursor: pointer;
   flex-shrink: 0;
   color: var(--color-accent);
-  font-size: 16px;
+  font-size: 32px;
   padding: 0;
   transition: opacity var(--duration-fast) var(--ease-standard);
 }
@@ -763,7 +763,54 @@ html, body {
 
 .fab:active { transform: scale(.93); }
 
-/* ── Pull-to-Refresh Overlay ── */
+/* ── Filter Scroll Container ── */
+/* canonical class: .filter-scroll                                */
+/* Edge-to-edge horizontal scroll track. Used in frost bar and   */
+/* scroll content. padding-inline gives chips breathing room     */
+/* while scroll track is full-width.                             */
+.filter-scroll {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-inline: var(--space-4);
+}
+
+.filter-scroll::-webkit-scrollbar { display: none; }
+
+/* When .filter-scroll lives inside .scroll-pane, the pane has  */
+/* its own side padding — use negative margin to break out of it */
+/* so the scroll track reaches the screen edge.                  */
+.scroll-pane .filter-scroll,
+.scroll-pane .filter-row {
+  margin-inline: calc(var(--space-4) * -1);
+}
+
+/* ── Filter Chip ── */
+/* canonical class: .filter-chip, .filter-chip.active            */
+/* Unified chip style — same in frost bar and scroll content.    */
+.filter-chip {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-3);
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.filter-chip.active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(59, 130, 246, .12);
+}
+
+
 /* canonical class: .ptr-overlay, .ptr-overlay-spinner          */
 /* Fixed spinner that appears below the frost bar on pull.      */
 /* No layout impact — pure overlay, z-index below frost bar.   */

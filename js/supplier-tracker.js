@@ -285,9 +285,9 @@ const SupplierTracker = (() => {
     // Unit bisnis filter chips
     const allUnits = [...new Set(DB.suppliers.flatMap(s => s.units || []))].sort();
     document.getElementById('filter-unit').innerHTML = allUnits.length
-      ? `<div class="chip ${!unitFilter ? 'active' : ''}" data-unit="">Semua Unit</div>`
+      ? `<div class="filter-chip ${!unitFilter ? 'active' : ''}" data-unit="">Semua Unit</div>`
         + allUnits.map(u =>
-            `<div class="chip ${unitFilter === u ? 'active' : ''}" data-unit="${u}">${u}</div>`
+            `<div class="filter-chip ${unitFilter === u ? 'active' : ''}" data-unit="${u}">${u}</div>`
           ).join('')
       : '';
 
@@ -298,10 +298,10 @@ const SupplierTracker = (() => {
     );
     const allCities = [...new Set(preCity.map(s => s.kota).filter(Boolean))].sort();
     document.getElementById('filter-city').innerHTML = allCities.length
-      ? `<div class="chip ${!cityFilter ? 'active' : ''}" data-city="">Semua Kota</div>`
+      ? `<div class="filter-chip ${!cityFilter ? 'active' : ''}" data-city="">Semua Kota</div>`
         + allCities.map(c => {
             const count = preCity.filter(s => s.kota === c).length;
-            return `<div class="chip ${cityFilter === c ? 'active' : ''}" data-city="${c}">${c} (${count})</div>`;
+            return `<div class="filter-chip ${cityFilter === c ? 'active' : ''}" data-city="${c}">${c} (${count})</div>`;
           }).join('')
       : '';
 
@@ -1380,23 +1380,23 @@ const SupplierTracker = (() => {
 
     // ── Level filter chips (static) ──
     document.getElementById('filter-level').addEventListener('click', e => {
-      const chip = e.target.closest('.chip[data-level]');
+      const chip = e.target.closest('.filter-chip[data-level]');
       if (!chip) return;
-      document.querySelectorAll('#filter-level .chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#filter-level .filter-chip').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       setLevelFilter(chip.dataset.level);
     });
 
     // ── Unit filter chips (dynamic) ──
     document.getElementById('filter-unit').addEventListener('click', e => {
-      const chip = e.target.closest('.chip');
+      const chip = e.target.closest('.filter-chip');
       if (!chip || !('unit' in chip.dataset)) return;
       setUnitFilter(chip.dataset.unit);
     });
 
     // ── City filter chips (dynamic) ──
     document.getElementById('filter-city').addEventListener('click', e => {
-      const chip = e.target.closest('.chip');
+      const chip = e.target.closest('.filter-chip');
       if (!chip || !('city' in chip.dataset)) return;
       setCityFilter(chip.dataset.city);
     });

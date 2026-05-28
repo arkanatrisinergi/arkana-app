@@ -8,38 +8,19 @@
    ═══════════════════════════════════════════════════ */
 
 /* ── Filter bar — inside frost bar ── */
-/* Sits below topbar, inside .frost-bar glass container */
+/* Sits below topbar, inside .frost-bar glass container         */
+/* Side padding removed — .filter-scroll handles its own inset  */
+/* .filter-chip canonical style lives in base.css               */
 .filter-bar {
-  display: flex;
-  gap: 8px;
-  padding: 8px 16px 10px;
   overflow-x: auto;
   scrollbar-width: none;
   border-top: 0.5px solid var(--color-border-glass-inner);
+  padding-block: var(--space-2);
 }
 
 .filter-bar::-webkit-scrollbar { display: none; }
 
-.filter-chip {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-full);
-  padding: 5px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-3);
-  cursor: pointer;
-  white-space: nowrap;
-  font-family: inherit;
-  transition: all var(--duration-fast) var(--ease-standard);
-  flex-shrink: 0;
-}
-
-.filter-chip.active {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: rgba(59, 130, 246, .12);
-}
+/* filter-bar uses .filter-scroll inside it for the chip row    */
 
 /* ── Project list — the scroll pane ── */
 .pm-list {

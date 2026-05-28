@@ -8,45 +8,17 @@
    ═══════════════════════════════════════════════════ */
 
 /* ── Filters wrap — inside frost bar ── */
-/* Sits below tab-bar, inside .frost-bar glass container */
+/* Sits below tab-bar, inside .frost-bar glass container        */
+/* Side padding removed — .filter-scroll handles its own inset  */
 .filters-wrap {
-  padding: 8px 16px 10px;
+  padding-block: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
   border-top: 0.5px solid var(--color-border-glass-inner);
 }
 
-/* ── Filter chips (horizontal scroll) ── */
-.filter-scroll {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.filter-scroll::-webkit-scrollbar { display: none; }
-
-.filter-chip {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-full);
-  padding: 5px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-3);
-  cursor: pointer;
-  white-space: nowrap;
-  font-family: inherit;
-  transition: all var(--duration-fast) var(--ease-standard);
-  flex-shrink: 0;
-}
-
-.filter-chip.active {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: rgba(59, 130, 246, .12);
-}
+/* .filter-chip and .filter-scroll canonical styles in base.css */
 
 /* ── Scroll pane — inner content wrapper ── */
 .scroll-pane {
