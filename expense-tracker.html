@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="css/expense-tracker.css">
 
   <!-- JS load order: config → constants → utils → app → page -->
-  <script src="config.js?v=2.0.3"></script>
+  <script src="config.js?v=2.0.4"></script>
   <script src="js/constants.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/app.js"></script>
@@ -224,10 +224,13 @@
     threshold = threshold || 10;
     var frost  = document.getElementById(frostId);
     var scroll = document.getElementById(scrollId);
+    var app    = document.getElementById('app');
     if (!frost || !scroll) return;
 
     function setpad() {
-      scroll.style.paddingTop = frost.offsetHeight + 12 + 'px';
+      var h = frost.offsetHeight;
+      scroll.style.paddingTop = h + 12 + 'px';
+      if (app) app.style.setProperty('--frost-h', h + 'px');
     }
     setpad();
 

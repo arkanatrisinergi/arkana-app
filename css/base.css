@@ -773,6 +773,10 @@ html, body {
   height: 0;
   opacity: 0;
   /* overflow:hidden removed — was clipping spinner+label during height animation */
+  /* padding-top pushes spinner below the frost-bar glass overlay.
+     --frost-h is set on #app by initFrostBar() immediately on DOMContentLoaded.
+     Fallback 0px (not 100px) so there's no gap when var is not yet set. */
+  padding-top: var(--frost-h, 0px);
   transition: height var(--duration-normal) var(--ease-standard),
               opacity var(--duration-fast) var(--ease-standard);
   background: var(--color-bg);
