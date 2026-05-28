@@ -168,31 +168,31 @@ function getActivityLog() {
 
 // ─────────────────────────────────────────
 // PULL TO REFRESH
-// Attach to any scrollable element.
+// Simple overlay spinner — no DOM insertion tricks, no flex manipulation.
+// A fixed spinner appears below the frost bar when user pulls down past
+// the threshold. Disappears when refresh completes.
 //
-// scrollEl: DOM element OR a function that returns the current
-//           active scroll element (useful when active pane changes).
-// onRefresh: async function called when user pulls down.
+// scrollEl: DOM element OR function returning the current scroll element.
+// onRefresh: async function — spinner stays visible until it resolves.
 //
-// Fix v1.9.0:
-// - Bounds check now validates BOTH X and Y axis — prevents PTR
-//   triggering when touch starts outside the scroll element
-//   (e.g. in a filter bar above the list).
-// - Reset guard: pulling = false immediately on out-of-bounds
-//   touchstart, not only on touchmove. Prevents stale pulling state
-//   corrupting subsequent PTR attempts.
-// - scrollEl can be a function: evaluated fresh on every touchstart
-//   so supplier-tracker can pass a single PTR instance that always
-//   checks the currently active pane.
-//
-// Usage:
-//   initPullToRefresh(document.getElementById('my-list'), async () => { ... })
-//   initPullToRefresh(() => getActivePaneEl(), async () => { ... })
+// Design: mimics Chrome mobile PTR — overlay spinner only, no label,
+// no inline element that affects layout.
 // ─────────────────────────────────────────
 
+// Shared overlay — created once, reused across all PTR instances.
+let _ptrOverlay = null;
+
+function _getPtrOverlay() {
+  if (_ptrOverlay) return _ptrOverlay;
+  _ptrOverlay = document.createElement('div');
+  _ptrOverlay.className = 'ptr-overlay';
+  _ptrOverlay.innerHTML = '<div class="ptr-overlay-spinner"></div>';
+  document.getElementById('app').appendChild(_ptrOverlay);
+  return _ptrOverlay;
+}
+
 function initPullToRefresh(scrollEl, onRefresh) {
-  const THRESHOLD = 72;
-  const MAX_PULL  = 96;
+  const THRESHOLD = 80;   // px pull distance to trigger refresh
 
   let startY     = 0;
   let pulling    = false;
@@ -203,91 +203,67 @@ function initPullToRefresh(scrollEl, onRefresh) {
     return typeof scrollEl === 'function' ? scrollEl() : scrollEl;
   }
 
-  // Insert indicator as stable sibling BEFORE the initial scroll element.
-  // For function-based scrollEl, insert before the parent container.
-  const referenceEl = _resolveEl();
-  const indicator = document.createElement('div');
-  indicator.className = 'ptr-indicator';
-  indicator.innerHTML = '<div class="ptr-spinner"></div><span class="ptr-label">Tarik untuk refresh</span>';
-  referenceEl.parentElement.insertBefore(indicator, referenceEl);
+  const overlay = _getPtrOverlay();
 
-  function _setIndicator(pull) {
-    const progress = Math.min(pull / THRESHOLD, 1);
-    indicator.style.height = Math.min(pull * 0.6, MAX_PULL * 0.6) + 'px';
-    indicator.style.opacity = progress;
-    indicator.querySelector('.ptr-label').textContent =
-      pull >= THRESHOLD ? 'Lepaskan untuk refresh' : 'Tarik untuk refresh';
+  function _show() {
+    overlay.classList.add('active');
   }
 
-  function _reset() {
-    indicator.style.height = '0';
-    indicator.style.opacity = '0';
-    indicator.querySelector('.ptr-label').textContent = 'Tarik untuk refresh';
-    pulling = false;
+  function _hide() {
+    overlay.classList.remove('active');
   }
 
-  // Attach touch events to parent — screen level.
-  // Using the reference element's parent as the touch target ensures
-  // events are captured even when scroll element content is replaced.
-  const touchTarget = referenceEl.parentElement;
-
-  touchTarget.addEventListener('touchstart', e => {
+  // Touch events on document — no parent element dependency
+  document.addEventListener('touchstart', e => {
     if (refreshing) return;
 
-    // Resolve current active scroll element (may change if tabs switch)
-    const el = _resolveEl();
-
-    // Y-axis bounds check — touch must start within the scroll element
-    // vertically. Prevents filter bars or other elements above the list
-    // from accidentally triggering PTR.
+    const el    = _resolveEl();
     const rect  = el.getBoundingClientRect();
     const touch = e.touches[0];
 
+    // Only trigger when touch starts inside the scroll element
     const outOfBounds =
       touch.clientX < rect.left   ||
       touch.clientX > rect.right  ||
       touch.clientY < rect.top    ||
       touch.clientY > rect.bottom;
 
-    if (outOfBounds) {
-      // Reset immediately — prevents stale pulling state
-      pulling = false;
-      return;
-    }
+    if (outOfBounds) { pulling = false; return; }
 
-    if (el.scrollTop > 0) return;
+    // Only trigger when already at the top
+    if (el.scrollTop > 0) { pulling = false; return; }
 
     startY  = touch.clientY;
     pulling = true;
   }, { passive: true });
 
-  touchTarget.addEventListener('touchmove', e => {
+  document.addEventListener('touchmove', e => {
     if (!pulling || refreshing) return;
     const dist = e.touches[0].clientY - startY;
     if (dist <= 0) { pulling = false; return; }
-    _setIndicator(dist);
+    // Show overlay as a hint once pull passes half threshold
+    if (dist > THRESHOLD / 2) _show();
   }, { passive: true });
 
-  touchTarget.addEventListener('touchend', async e => {
+  document.addEventListener('touchend', async e => {
     if (!pulling || refreshing) return;
     const dist = e.changedTouches[0].clientY - startY;
+    pulling = false;
 
     if (dist < THRESHOLD) {
-      _reset();
+      _hide();
       return;
     }
 
-    // Trigger refresh
+    // Trigger refresh — keep spinner visible until done
     refreshing = true;
-    indicator.style.height   = '48px';
-    indicator.style.opacity  = '1';
-    indicator.querySelector('.ptr-label').textContent = 'Memperbarui...';
+    _show();
 
     try {
       await onRefresh();
     } finally {
       refreshing = false;
-      _reset();
+      _hide();
     }
   }, { passive: true });
 }

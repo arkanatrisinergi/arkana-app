@@ -486,9 +486,10 @@
 
     function setpad() {
       var h = frost.offsetHeight;
-      // Only set --frost-h for .ptr-indicator spacing — scroll-main needs no padding-top
-      // because it sits naturally below .ptr-indicator in the flex column
-      if (app) app.style.setProperty('--frost-h', (h + 8) + 'px');
+      // Content starts below the frost bar with 16px breathing room
+      scroll.style.paddingTop = h + 16 + 'px';
+      // --frost-h used by .ptr-overlay to position spinner below the bar
+      if (app) app.style.setProperty('--frost-h', h + 'px');
     }
     setpad();
 

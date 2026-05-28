@@ -229,7 +229,8 @@
 
     function setpad() {
       var h = frost.offsetHeight;
-      if (app) app.style.setProperty('--frost-h', (h + 8) + 'px');
+      scroll.style.paddingTop = h + 16 + 'px';
+      if (app) app.style.setProperty('--frost-h', h + 'px');
     }
     setpad();
 
