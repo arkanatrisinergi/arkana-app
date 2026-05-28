@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="css/project-manager.css">
 
   <!-- JS load order: config → constants → utils → app → page -->
-  <script src="config.js?v=2.0.5"></script>
+  <script src="config.js?v=2.0.6"></script>
   <script src="js/constants.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/app.js"></script>
@@ -36,9 +36,11 @@
       </div>
       <!-- Filter bar sits inside frost — separated by glass inner border -->
       <div class="filter-bar">
-        <button class="filter-chip active" data-filter="all">Semua</button>
-        <button class="filter-chip" data-filter="active">Aktif</button>
-        <button class="filter-chip" data-filter="closed">Selesai</button>
+        <div class="filter-scroll">
+          <button class="filter-chip active" data-filter="all">Semua</button>
+          <button class="filter-chip" data-filter="active">Aktif</button>
+          <button class="filter-chip" data-filter="closed">Selesai</button>
+        </div>
       </div>
     </div>
 

@@ -763,7 +763,49 @@ html, body {
 
 .fab:active { transform: scale(.93); }
 
-/* ── Pull-to-Refresh Overlay ── */
+/* ── Filter Scroll Container ── */
+/* canonical class: .filter-scroll                                */
+/* Edge-to-edge horizontal scroll track. Used in frost bar and   */
+/* scroll content. Side padding on the container (not the row)   */
+/* gives chips breathing room while scroll track is full-width.  */
+.filter-scroll {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-inline: var(--space-4);
+  /* Negative margin breaks out of any parent side padding so    */
+  /* the scroll track reaches the screen edge                    */
+  margin-inline: calc(var(--space-4) * -1);
+}
+
+.filter-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Filter Chip ── */
+/* canonical class: .filter-chip, .filter-chip.active            */
+/* Unified chip style — same in frost bar and scroll content.    */
+.filter-chip {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-3);
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.filter-chip.active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(59, 130, 246, .12);
+}
+
+
 /* canonical class: .ptr-overlay, .ptr-overlay-spinner          */
 /* Fixed spinner that appears below the frost bar on pull.      */
 /* No layout impact — pure overlay, z-index below frost bar.   */
