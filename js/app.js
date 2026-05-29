@@ -269,9 +269,18 @@ function initPullToRefresh(scrollEl, onRefresh) {
 // ─────────────────────────────────────────
 function initSheetDrag(overlayId, sheetId, onClose) {
   const overlayEl = document.getElementById(overlayId);
-  const sheetEl   = sheetId.includes(' ') || sheetId.startsWith('.')
-    ? document.querySelector(sheetId)
-    : document.getElementById(sheetId);
+  // sheetId can be an element ID or a CSS selector (containing space or '.')
+  // For "overlayId > .sheet" pattern, prefix the overlayId with # automatically
+  let sheetEl;
+  if (sheetId.includes('>')) {
+    // Pattern: "overlayId > .sheet" — convert first part to #id selector
+    const parts = sheetId.split('>').map(s => s.trim());
+    sheetEl = document.querySelector('#' + parts[0] + ' > ' + parts[1]);
+  } else if (sheetId.startsWith('.') || sheetId.startsWith('#')) {
+    sheetEl = document.querySelector(sheetId);
+  } else {
+    sheetEl = document.getElementById(sheetId);
+  }
   if (!overlayEl || !sheetEl) return;
 
   let startY    = 0;
@@ -281,45 +290,51 @@ function initSheetDrag(overlayId, sheetId, onClose) {
   const CLOSE_THRESHOLD = 0.3; // 30% of sheet height
 
   function _close() {
-    sheetEl.style.transition = '';
-    if (onClose) {
-      onClose();
-    } else {
+    // Animate sheet down before removing active
+    sheetEl.style.transition = `transform var(--duration-sheet) var(--ease-sheet)`;
+    sheetEl.style.transform  = 'translateX(-50%) translateY(100%)';
+    setTimeout(() => {
+      sheetEl.style.transition = '';
+      sheetEl.style.transform  = '';
       overlayEl.classList.remove('active');
-    }
+      if (onClose) onClose();
+    }, 350);
   }
 
   function _snapBack() {
     sheetEl.style.transition = `transform var(--duration-sheet) var(--ease-sheet)`;
     sheetEl.style.transform  = 'translateX(-50%) translateY(0)';
-    setTimeout(() => { sheetEl.style.transition = ''; }, 400);
+    setTimeout(() => {
+      sheetEl.style.transition = '';
+      sheetEl.style.transform  = '';
+    }, 400);
   }
 
   sheetEl.addEventListener('touchstart', e => {
-    // Only drag from handle or top area of sheet
-    const touch = e.touches[0];
+    const touch     = e.touches[0];
     const sheetRect = sheetEl.getBoundingClientRect();
-    // Allow drag from top 56px of sheet (handle zone)
-    if (touch.clientY - sheetRect.top > 56) return;
+    // Allow drag from top 64px of sheet (handle + title zone)
+    if (touch.clientY - sheetRect.top > 64) return;
 
     startY   = touch.clientY;
     currentY = 0;
     dragging = true;
+    // Override CSS transition immediately so drag feels instant
     sheetEl.style.transition = 'none';
   }, { passive: true });
 
   sheetEl.addEventListener('touchmove', e => {
     if (!dragging) return;
     currentY = e.touches[0].clientY - startY;
-    if (currentY < 0) { currentY = 0; return; } // Don't allow dragging up
+    if (currentY < 0) { currentY = 0; return; }
     sheetEl.style.transform = `translateX(-50%) translateY(${currentY}px)`;
   }, { passive: true });
 
   sheetEl.addEventListener('touchend', () => {
     if (!dragging) return;
     dragging = false;
-    const sheetHeight   = sheetEl.offsetHeight;
-    const shouldClose   = currentY > sheetHeight * CLOSE_THRESHOLD;
+    const sheetHeight = sheetEl.offsetHeight;
+    const shouldClose = currentY > sheetHeight * CLOSE_THRESHOLD;
     if (shouldClose) _close(); else _snapBack();
   });
 }

@@ -514,7 +514,7 @@ html, body {
   height: 4px;
   background: var(--color-border-2);
   border-radius: var(--radius-full);
-  margin: 0 auto var(--space-6);
+  margin: 0 auto var(--space-8);
 }
 
 .sheet-title {
