@@ -174,9 +174,6 @@ function getActivityLog() {
 //
 // scrollEl: DOM element OR function returning the current scroll element.
 // onRefresh: async function — spinner stays visible until it resolves.
-//
-// Design: mimics Chrome mobile PTR — overlay spinner only, no label,
-// no inline element that affects layout.
 // ─────────────────────────────────────────
 
 // Shared overlay — created once, reused across all PTR instances.
@@ -192,36 +189,36 @@ function _getPtrOverlay() {
 }
 
 function initPullToRefresh(scrollEl, onRefresh) {
-  const THRESHOLD = 80;   // px pull distance to trigger refresh
+  const THRESHOLD = 80;
 
   let startY     = 0;
   let pulling    = false;
   let refreshing = false;
 
-  // Resolve scrollEl — supports DOM element or function
   function _resolveEl() {
     return typeof scrollEl === 'function' ? scrollEl() : scrollEl;
   }
 
   const overlay = _getPtrOverlay();
 
-  function _show() {
-    overlay.classList.add('active');
+  function _show() { overlay.classList.add('active'); }
+  function _hide() { overlay.classList.remove('active'); }
+
+  // Guard — returns true if any overlay/sheet is currently open
+  function _isOverlayOpen() {
+    return !![
+      ...document.querySelectorAll('.overlay.active'),
+      ...document.querySelectorAll('.confirm-overlay.active')
+    ].length;
   }
 
-  function _hide() {
-    overlay.classList.remove('active');
-  }
-
-  // Touch events on document — no parent element dependency
   document.addEventListener('touchstart', e => {
-    if (refreshing) return;
+    if (refreshing || _isOverlayOpen()) return;
 
     const el    = _resolveEl();
     const rect  = el.getBoundingClientRect();
     const touch = e.touches[0];
 
-    // Only trigger when touch starts inside the scroll element
     const outOfBounds =
       touch.clientX < rect.left   ||
       touch.clientX > rect.right  ||
@@ -229,8 +226,6 @@ function initPullToRefresh(scrollEl, onRefresh) {
       touch.clientY > rect.bottom;
 
     if (outOfBounds) { pulling = false; return; }
-
-    // Only trigger when already at the top
     if (el.scrollTop > 0) { pulling = false; return; }
 
     startY  = touch.clientY;
@@ -241,7 +236,6 @@ function initPullToRefresh(scrollEl, onRefresh) {
     if (!pulling || refreshing) return;
     const dist = e.touches[0].clientY - startY;
     if (dist <= 0) { pulling = false; return; }
-    // Show overlay as a hint once pull passes half threshold
     if (dist > THRESHOLD / 2) _show();
   }, { passive: true });
 
@@ -250,15 +244,10 @@ function initPullToRefresh(scrollEl, onRefresh) {
     const dist = e.changedTouches[0].clientY - startY;
     pulling = false;
 
-    if (dist < THRESHOLD) {
-      _hide();
-      return;
-    }
+    if (dist < THRESHOLD) { _hide(); return; }
 
-    // Trigger refresh — keep spinner visible until done
     refreshing = true;
     _show();
-
     try {
       await onRefresh();
     } finally {
@@ -266,4 +255,71 @@ function initPullToRefresh(scrollEl, onRefresh) {
       _hide();
     }
   }, { passive: true });
+}
+
+// ─────────────────────────────────────────
+// SHEET DRAG TO CLOSE
+// Attaches drag-down-to-dismiss behavior to a bottom sheet.
+// Dragging the sheet down past 30% of its height closes it.
+// Below threshold — snaps back with spring animation.
+//
+// overlayId: the .overlay element id
+// sheetId:   the .sheet element id
+// onClose:   optional callback after close (default: removes .active)
+// ─────────────────────────────────────────
+function initSheetDrag(overlayId, sheetId, onClose) {
+  const overlayEl = document.getElementById(overlayId);
+  const sheetEl   = sheetId.includes(' ') || sheetId.startsWith('.')
+    ? document.querySelector(sheetId)
+    : document.getElementById(sheetId);
+  if (!overlayEl || !sheetEl) return;
+
+  let startY    = 0;
+  let currentY  = 0;
+  let dragging  = false;
+
+  const CLOSE_THRESHOLD = 0.3; // 30% of sheet height
+
+  function _close() {
+    sheetEl.style.transition = '';
+    if (onClose) {
+      onClose();
+    } else {
+      overlayEl.classList.remove('active');
+    }
+  }
+
+  function _snapBack() {
+    sheetEl.style.transition = `transform var(--duration-sheet) var(--ease-sheet)`;
+    sheetEl.style.transform  = 'translateX(-50%) translateY(0)';
+    setTimeout(() => { sheetEl.style.transition = ''; }, 400);
+  }
+
+  sheetEl.addEventListener('touchstart', e => {
+    // Only drag from handle or top area of sheet
+    const touch = e.touches[0];
+    const sheetRect = sheetEl.getBoundingClientRect();
+    // Allow drag from top 56px of sheet (handle zone)
+    if (touch.clientY - sheetRect.top > 56) return;
+
+    startY   = touch.clientY;
+    currentY = 0;
+    dragging = true;
+    sheetEl.style.transition = 'none';
+  }, { passive: true });
+
+  sheetEl.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    currentY = e.touches[0].clientY - startY;
+    if (currentY < 0) { currentY = 0; return; } // Don't allow dragging up
+    sheetEl.style.transform = `translateX(-50%) translateY(${currentY}px)`;
+  }, { passive: true });
+
+  sheetEl.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    const sheetHeight   = sheetEl.offsetHeight;
+    const shouldClose   = currentY > sheetHeight * CLOSE_THRESHOLD;
+    if (shouldClose) _close(); else _snapBack();
+  });
 }

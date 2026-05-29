@@ -45,6 +45,17 @@ const SupplierTracker = (() => {
 
     _bindEvents();
 
+    // Sheet drag-to-close — all overlays
+    initSheetDrag('overlay-supplier',         'overlay-supplier > .sheet');
+    initSheetDrag('overlay-product',          'overlay-product > .sheet');
+    initSheetDrag('overlay-price',            'overlay-price > .sheet');
+    initSheetDrag('overlay-jasa',             'overlay-jasa > .sheet');
+    initSheetDrag('overlay-add-choice',       'overlay-add-choice > .sheet');
+    initSheetDrag('overlay-menu-supplier',    'overlay-menu-supplier > .sheet');
+    initSheetDrag('overlay-menu-product',     'overlay-menu-product > .sheet');
+    initSheetDrag('overlay-menu-jasa',        'overlay-menu-jasa > .sheet');
+    initSheetDrag('overlay-supplier-contact', 'overlay-supplier-contact > .sheet');
+
     // Pull to refresh — single instance, dynamically resolves active pane.
     // Passing a function instead of a fixed element ensures bounds check
     // always uses the currently visible pane, not a stale reference.
