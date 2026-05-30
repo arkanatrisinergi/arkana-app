@@ -23,6 +23,7 @@
 #screen-login {
   background: var(--color-bg);
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-width: none;
 }
 

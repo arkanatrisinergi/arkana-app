@@ -492,9 +492,10 @@ html, body {
   width: 100%;
   max-width: 480px;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: none;
+  border-top: 1px solid var(--color-border);
   border-radius: var(--radius-3xl) var(--radius-3xl) 0 0;
-  padding: var(--space-5) var(--space-5) max(env(safe-area-inset-bottom), var(--space-6));
+  padding: var(--space-4) var(--space-5) max(env(safe-area-inset-bottom), var(--space-6));
   z-index: 101;
   transition: transform var(--duration-sheet) var(--ease-sheet);
   max-height: 90vh;
@@ -513,7 +514,7 @@ html, body {
   height: 4px;
   background: var(--color-border-2);
   border-radius: var(--radius-full);
-  margin: 0 auto 18px;
+  margin: 0 auto var(--space-8);
 }
 
 .sheet-title {
@@ -534,25 +535,29 @@ html, body {
 /* canonical classes: .btn, .btn-primary, .btn-secondary, .btn-danger */
 .btn-row {
   display: flex;
-  gap: 10px;
+  gap: var(--space-2);
   margin-top: var(--space-5);
 }
 
 .btn {
   flex: 1;
-  padding: 14px;
+  height: 48px;
+  padding: 0 var(--space-4);
   border-radius: var(--radius-lg);
   font-size: var(--text-xl);
   font-weight: var(--weight-bold);
   font-family: inherit;
   cursor: pointer;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: opacity var(--duration-normal) var(--ease-standard);
 }
 
-.btn:active         { opacity: .8; }
+.btn:active         { opacity: .75; }
 .btn-primary        { background: var(--color-accent); color: white; }
-.btn-secondary      { background: var(--color-surface-2); color: var(--color-text-2); border: 1px solid var(--color-border); }
+.btn-secondary      { background: transparent; color: var(--color-text-2); border: 1px solid var(--color-border-2); }
 .btn-danger         { background: rgba(239, 68, 68, .1); color: var(--color-danger); border: 1px solid rgba(239, 68, 68, .2); }
 
 /* ── Form fields ── */
@@ -648,29 +653,31 @@ html, body {
 }
 
 /* ── Toast ── */
-/* canonical class: .toast, .toast-success (also .success), .toast-error (also .error) */
+/* canonical class: .toast, .success, .error */
 .toast {
   position: fixed;
-  bottom: 80px;
+  bottom: var(--space-12);
   left: 50%;
-  transform: translateX(-50%) translateY(20px);
+  transform: translateX(-50%) translateY(var(--space-5));
+  max-width: calc(100% - var(--space-8));
   background: var(--color-surface-2);
   border: 1px solid var(--color-border-2);
   border-radius: var(--radius-lg);
-  padding: 10px var(--space-5);
+  padding: var(--space-2) var(--space-5);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
   color: var(--color-text);
   z-index: 200;
   opacity: 0;
   transition: all var(--duration-slow) var(--ease-standard);
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
   pointer-events: none;
 }
 
-.toast.show              { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.success           { border-color: var(--color-success); color: var(--color-success); }
-.toast.error             { border-color: var(--color-danger);  color: var(--color-danger);  }
+.toast.show    { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: var(--color-success); color: var(--color-success); }
+.toast.error   { border-color: var(--color-danger);  color: var(--color-danger);  }
 
 /* ── Loading Overlay ── */
 /* canonical class: .loading-overlay */
@@ -709,7 +716,7 @@ html, body {
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .8);
+  background: rgba(0, 0, 0, .6);
   z-index: 200;
   display: flex;
   align-items: center;
@@ -725,7 +732,7 @@ html, body {
 .confirm-box {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--space-5);
+  border-radius: var(--radius-3xl);
   padding: var(--space-6);
   width: 100%;
   max-width: 320px;
@@ -737,21 +744,20 @@ html, body {
 
 .confirm-title { font-size: var(--text-4xl); font-weight: var(--weight-extrabold); color: var(--color-text); margin-bottom: var(--space-2); }
 .confirm-msg   { font-size: var(--text-lg); color: var(--color-text-2); line-height: 1.5; margin-bottom: var(--space-5); }
-.confirm-btns  { display: flex; gap: 10px; }
+.confirm-btns  { display: flex; gap: var(--space-2); }
 
 /* ── FAB ── */
 /* canonical class: .fab */
 .fab {
   position: fixed;
   bottom: var(--space-6);
-  right: max(calc(50% - 240px + 16px), 16px);
-  width: 52px;
-  height: 52px;
+  right: max(calc(50% - 240px + var(--space-4)), var(--space-4));
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-2xl);
   background: var(--color-accent);
   border: none;
   color: white;
-  font-size: 22px;
   display: flex;
   align-items: center;
   justify-content: center;

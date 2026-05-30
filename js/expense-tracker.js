@@ -33,11 +33,12 @@ const ExpenseApp = (() => {
     _bindEvents();
     _loadData();
 
-    // Pull to refresh — uses _fetchFresh() which is truly awaitable.
-    // Unlike _loadData() (stale-while-revalidate, returns immediately),
-    // _fetchFresh() awaits the API call — PTR indicator stays visible
-    // until data arrives, giving the user clear loading feedback.
+    // Pull to refresh
     initPullToRefresh(document.getElementById('scroll-main'), _fetchFresh);
+
+    // Sheet drag-to-close
+    initSheetDrag('overlay-expense', 'overlay-expense > .sheet');
+    initSheetDrag('overlay-detail',  'overlay-detail > .sheet');
   }
 
   function _requireAuth() {
