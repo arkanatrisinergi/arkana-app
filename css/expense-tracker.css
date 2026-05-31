@@ -1,10 +1,12 @@
 /* ═══════════════════════════════════════════════════
-   Arkana App — Expense Tracker CSS  v2.0.3
+   Arkana App — Expense Tracker CSS  v2.1.0
    Page-specific styles. base.css loaded first.
    PRD-00.4-B: topbar/back-btn/tab-bar rules removed —
    now owned by base.css. Scroll containers updated to
    .scroll-area + .scroll-pane pattern.
    Filters-wrap moved inside frost-bar in HTML.
+   PRD-00.4-D: Expense card redesigned — single column
+   layout, amount as hero, date + badges below divider.
    ═══════════════════════════════════════════════════ */
 
 /* ── Filters wrap — inside frost bar ── */
@@ -22,69 +24,76 @@
 
 /* ── Scroll pane — inner content wrapper ── */
 .scroll-pane {
-  padding: 14px 20px 100px;
+  padding: var(--space-3) var(--space-5) 100px;
+  /* Note: 100px bottom is intentional FAB clearance — no token covers this */
 }
 
 /* ── Expense card ── */
-.card-list { display: flex; flex-direction: column; gap: 10px; }
+.card-list { display: flex; flex-direction: column; gap: var(--space-2); }
 
 .expense-card {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: 14px 16px;
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
   transition: border-color var(--duration-fast) var(--ease-standard);
 }
 
-.expense-card:active { border-color: var(--color-accent); }
-
-.card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.card-left { flex: 1; min-width: 0; }
+.expense-card:active { border-color: var(--color-accent); opacity: .85; }
 
 .card-desc {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
   color: var(--color-text);
-  margin-bottom: 3px;
+  margin-bottom: var(--space-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.card-date {
-  font-size: 11px;
-  color: var(--color-text-3);
-  font-family: var(--font-mono);
-}
-
 .card-amount {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-extrabold);
   color: var(--color-text);
-  white-space: nowrap;
   font-family: var(--font-mono);
+  letter-spacing: -.02em;
 }
 
-.card-bottom {
+.card-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin-block: var(--space-3);
+}
+
+.card-footer {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.card-date {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.card-badges {
+  display: flex;
+  gap: var(--space-1);
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
 }
 
 /* ── Badges ── */
 .badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 8px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  padding: 2px var(--space-2);
   border-radius: var(--radius-full);
   white-space: nowrap;
 }
@@ -133,27 +142,27 @@
 
 /* ── Detail sheet ── */
 .detail-desc {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-extrabold);
   color: var(--color-text);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-1);
   line-height: 1.3;
 }
 
 .detail-amount {
   font-size: 28px;
-  font-weight: 800;
+  font-weight: var(--weight-extrabold);
   color: var(--color-text);
   font-family: var(--font-mono);
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
   letter-spacing: -.02em;
 }
 
 .detail-badges {
   display: flex;
-  gap: 6px;
+  gap: var(--space-1);
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .detail-rows {
@@ -167,8 +176,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 11px 14px;
-  gap: 12px;
+  padding: 11px var(--space-3);
+  gap: var(--space-3);
 }
 
 .detail-row:not(:last-child) {
@@ -176,8 +185,8 @@
 }
 
 .detail-row-label {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--color-text-3);
@@ -185,37 +194,37 @@
 }
 
 .detail-row-value {
-  font-size: 13px;
+  font-size: var(--text-lg);
   color: var(--color-text);
   text-align: right;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 /* ── Form optional label ── */
 .form-optional {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--color-text-3);
-  font-weight: 400;
+  font-weight: var(--weight-regular);
   text-transform: none;
   letter-spacing: 0;
 }
 
 /* ── Ringkasan ── */
-.summary-section { margin-bottom: 24px; }
+.summary-section { margin-bottom: var(--space-6); }
 
 .summary-section-title {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
   text-transform: uppercase;
   letter-spacing: .12em;
   color: var(--color-text-3);
-  margin-bottom: 10px;
+  margin-bottom: var(--space-2);
 }
 
 .summary-totals {
   display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .summary-total-card {
@@ -223,21 +232,21 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 14px;
+  padding: var(--space-3);
   text-align: center;
 }
 
 .summary-total-num {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-extrabold);
   color: var(--color-text);
   font-family: var(--font-mono);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
   letter-spacing: -.02em;
 }
 
 .summary-total-label {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--color-text-3);
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -254,14 +263,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 14px;
-  gap: 12px;
+  padding: var(--space-3) var(--space-3);
+  gap: var(--space-3);
 }
 
 .summary-row:not(:last-child) { border-bottom: 1px solid var(--color-border); }
 
 .summary-row-label {
-  font-size: 13px;
+  font-size: var(--text-lg);
   color: var(--color-text-2);
   flex: 1;
   min-width: 0;
@@ -271,17 +280,17 @@
 }
 
 .summary-row-value {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
   color: var(--color-text);
   font-family: var(--font-mono);
   white-space: nowrap;
 }
 
 .summary-row-sub {
-  font-size: 11px;
+  font-size: var(--text-base);
   color: var(--color-text-3);
-  margin-top: 2px;
+  margin-top: var(--space-1);
 }
 
 /* Reimburse outstanding highlight */
@@ -292,10 +301,10 @@
   background: rgba(245, 158, 11, .12);
   border: 1px solid rgba(245, 158, 11, .3);
   border-radius: var(--radius-md);
-  padding: 12px 14px;
-  margin-bottom: 10px;
-  font-size: 13px;
-  font-weight: 700;
+  padding: var(--space-3) var(--space-3);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
   color: var(--color-warning);
 }
 
@@ -304,12 +313,12 @@
   border: 1px solid rgba(245, 158, 11, .2);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
-.reimburse-card .summary-row { padding: 12px 14px; }
+.reimburse-card .summary-row { padding: var(--space-3); }
 .reimburse-card .summary-row:not(:last-child) { border-bottom: 1px solid rgba(245, 158, 11, .15); }
-.reimburse-card .summary-row-label { color: var(--color-text); font-weight: 600; }
+.reimburse-card .summary-row-label { color: var(--color-text); font-weight: var(--weight-semibold); }
 .reimburse-card .summary-row-value { color: var(--color-warning); }
 
 /* Vendor paylater outstanding */
@@ -318,11 +327,11 @@
   border: 1px solid rgba(239, 68, 68, .15);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .paylater-card .summary-row:not(:last-child) { border-bottom: 1px solid rgba(239, 68, 68, .1); }
-.paylater-card .summary-row-label { color: var(--color-text); font-weight: 600; }
+.paylater-card .summary-row-label { color: var(--color-text); font-weight: var(--weight-semibold); }
 .paylater-card .summary-row-value { color: var(--color-danger); }
 
 .btn-lunas {
@@ -330,9 +339,9 @@
   border: 1px solid rgba(16, 185, 129, .2);
   color: var(--color-success);
   border-radius: var(--radius-sm);
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 700;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;

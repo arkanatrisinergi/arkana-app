@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════
-// Arkana App — Component Library  v1.10.0
+// Arkana App — Component Library  v2.1.0
 // UI.* — pure functions returning HTML strings.
 // No DOM access. No side effects. Input in, HTML out.
 //
@@ -181,6 +181,8 @@ const UI = (() => {
 
     /**
      * Supplier list card.
+     * PRD-00.4-D: added .supplier-divider between info and badges.
+     * Meta text promoted to mono. Count chips quieted to neutral.
      * @param {object} supplier  — Supplier record from DB
      * @param {object} countMap  — { [supplierId]: { produk: n, jasa: n } }
      * @returns {string} HTML
@@ -208,6 +210,7 @@ const UI = (() => {
             <div class="supplier-meta">${_esc(phone)}${s.kota ? ' · ' + _esc(s.kota) : ''}</div>
           </div>
         </div>
+        <div class="supplier-divider"></div>
         <div class="supplier-badges">
           ${badge.level(s.level)}
           ${s.authorized && !isJasa ? badge.auth() : ''}
@@ -219,6 +222,9 @@ const UI = (() => {
 
     /**
      * Expense list card.
+     * PRD-00.4-D: layout changed from flex row to single column.
+     * Amount is now the hero — full width, dominant size.
+     * Date + badges sit below a hairline divider.
      * @param {object} expense   — Expense record
      * @param {Array}  projects  — Projects array for name lookup
      * @returns {string} HTML
@@ -245,24 +251,25 @@ const UI = (() => {
         : (e.tipe === 'proyek' ? badge.proyek('Proyek') : '');
 
       return `<div class="expense-card" data-id="${e.id}">
-        <div class="card-top">
-          <div class="card-left">
-            <div class="card-desc">${_esc(e.deskripsi || '(tanpa deskripsi)')}</div>
-            <div class="card-date">${_fmtDate(e.tanggal)}</div>
+        <div class="card-desc">${_esc(e.deskripsi || '(tanpa deskripsi)')}</div>
+        <div class="card-amount">${_fmtRp(e.jumlah)}</div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <div class="card-date">${_fmtDate(e.tanggal)}</div>
+          <div class="card-badges">
+            ${badge.kategori(kategoriLabel)}
+            ${badge.metode(e.metodePembayaran)}
+            ${reimburseTag}
+            ${proyekTag}
           </div>
-          <div class="card-amount">${_fmtRp(e.jumlah)}</div>
-        </div>
-        <div class="card-bottom">
-          ${badge.kategori(kategoriLabel)}
-          ${badge.metode(e.metodePembayaran)}
-          ${reimburseTag}
-          ${proyekTag}
         </div>
       </div>`;
     },
 
     /**
      * Project list card.
+     * PRD-00.4-D: stripe color driven by status (green=active, neutral=closed).
+     * Name weight increased. Unit demoted to plain mono text (no chip).
      * @param {object} project  — Project record
      * @returns {string} HTML
      */
@@ -271,7 +278,7 @@ const UI = (() => {
       const isClosed = p.status === 'closed';
 
       return `<div class="project-card ${isClosed ? 'closed' : ''}" data-id="${p.id}">
-        <div class="card-stripe"></div>
+        <div class="card-stripe ${isClosed ? 'stripe-closed' : 'stripe-active'}"></div>
         <div class="card-body">
           <div class="card-name">${_esc(p.nama)}</div>
           <div class="card-meta">
