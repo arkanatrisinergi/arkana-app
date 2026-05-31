@@ -43,9 +43,9 @@
 .expense-card:active { border-color: var(--color-accent); opacity: .85; }
 
 .card-desc {
-  font-size: var(--text-xl);
-  font-weight: var(--weight-bold);
-  color: var(--color-text);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-2);
   margin-bottom: var(--space-1);
   white-space: nowrap;
   overflow: hidden;
