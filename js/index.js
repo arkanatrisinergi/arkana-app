@@ -89,13 +89,9 @@ const IndexApp = (() => {
 
   function _setVersionStrings() {
     const v = typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'v1.x';
-    [
-      { id: 'login-version',   text: v },
-      { id: 'home-version',    text: v },
-      { id: 'setting-version', text: v + ' · PRD-00.1b' }
-    ].forEach(({ id, text }) => {
+    ['login-version', 'home-version', 'setting-version'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.textContent = text;
+      if (el) el.textContent = v;
     });
   }
 
@@ -420,25 +416,36 @@ const IndexApp = (() => {
     if (logs.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-icon">🕐</div>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="opacity:.3;margin-bottom:8px"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <div class="empty-text">Belum ada aktivitas.<br>Log akan muncul saat data mulai diubah.</div>
         </div>`;
       return;
     }
 
     const days = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
+    // User dot colors — derived from USERS registry gradient start color
+    const USER_DOT = {
+      arie: { dot: '#3B82F6', badge: 'rgba(59,130,246,.15)', text: '#3B82F6' },
+      ajin: { dot: '#10B981', badge: 'rgba(16,185,129,.15)',  text: '#10B981' }
+    };
+
     const items = logs.map(log => {
-      const user = USERS[log.userId] || { name: log.userId, avatar: '?', color: '#1E2640' };
-      const t = new Date(log.time);
+      const user    = USERS[log.userId] || { name: log.userId };
+      const palette = USER_DOT[log.userId] || { dot: '#3F3F46', badge: 'rgba(63,63,70,.2)', text: '#787880' };
+      const t       = new Date(log.time);
       const timeStr = `${days[t.getDay()]} ${t.getDate()}/${t.getMonth()+1} · `
                     + `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
       return `
         <div class="log-item">
-          <div class="log-avatar" style="background:${user.color}">${user.avatar}</div>
+          <div class="log-dot" style="background:${palette.dot};min-width:8px;"></div>
           <div class="log-body">
             <div class="log-action">${log.action}</div>
             <div class="log-detail">${log.detail}</div>
-            <div class="log-time">${timeStr}</div>
+            <div class="log-meta">
+              <span class="log-user-badge" style="background:${palette.badge};color:${palette.text};">${user.name || log.userId}</span>
+              <span class="log-time">${timeStr}</span>
+            </div>
           </div>
         </div>`;
     }).join('');
