@@ -364,8 +364,6 @@
 ══════════════════════════════════ */
 #screen-home {
   background: var(--color-bg);
-  display: flex;
-  flex-direction: column;
 }
 
 /* Home blob — animated same as login */
@@ -434,20 +432,19 @@
 }
 
 .feat-card {
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-2xl);
   padding: var(--space-4) var(--space-4);
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: border-color var(--duration-normal) var(--ease-standard),
-              transform var(--duration-fast) var(--ease-standard);
+  transition: transform var(--duration-fast) var(--ease-standard),
+              filter var(--duration-fast) var(--ease-standard);
+  /* No border, no accent strip — color IS the card */
 }
 
 .feat-card.active-card:active {
-  transform: scale(0.97);
-  border-color: var(--color-border-2);
+  transform: scale(0.96);
+  filter: brightness(0.92);
 }
 
 .feat-card.coming {
@@ -455,24 +452,14 @@
   cursor: not-allowed;
 }
 
-/* Left accent line per card color */
-.feat-card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: var(--space-4);
-  bottom: var(--space-4);
-  width: 3px;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-}
+/* Card surface colors — each card is its own tinted surface */
+.feat-card.c-blue   { background: rgba(59,  130, 246, 0.13); }
+.feat-card.c-green  { background: rgba(16,  185, 129, 0.13); }
+.feat-card.c-purple { background: rgba(139, 92,  246, 0.13); }
+.feat-card.c-orange { background: rgba(245, 158, 11,  0.11); }
+.feat-card.c-indigo { background: rgba(99,  102, 241, 0.13); }
 
-.feat-card.c-blue::before   { background: var(--color-accent); }
-.feat-card.c-green::before  { background: var(--color-success); }
-.feat-card.c-purple::before { background: var(--color-purple); }
-.feat-card.c-orange::before { background: var(--color-warning); }
-.feat-card.c-indigo::before { background: var(--color-accent-2); }
-
-/* Icon wrap — colored pill */
+/* Icon wrap — slightly stronger tint than card bg */
 .feat-icon-wrap {
   width: 40px;
   height: 40px;
@@ -484,11 +471,11 @@
   flex-shrink: 0;
 }
 
-.feat-icon-wrap.c-blue   { background: rgba(59,  130, 246, 0.12); color: var(--color-accent); }
-.feat-icon-wrap.c-green  { background: rgba(16,  185, 129, 0.12); color: var(--color-success); }
-.feat-icon-wrap.c-purple { background: rgba(139, 92,  246, 0.12); color: var(--color-purple); }
-.feat-icon-wrap.c-orange { background: rgba(245, 158, 11,  0.12); color: var(--color-warning); }
-.feat-icon-wrap.c-indigo { background: rgba(99,  102, 241, 0.12); color: var(--color-accent-2); }
+.feat-icon-wrap.c-blue   { background: rgba(59,  130, 246, 0.18); color: #60A5FA; }
+.feat-icon-wrap.c-green  { background: rgba(16,  185, 129, 0.18); color: #34D399; }
+.feat-icon-wrap.c-purple { background: rgba(139, 92,  246, 0.18); color: #A78BFA; }
+.feat-icon-wrap.c-orange { background: rgba(245, 158, 11,  0.18); color: #FCD34D; }
+.feat-icon-wrap.c-indigo { background: rgba(99,  102, 241, 0.18); color: #818CF8; }
 
 .feat-name {
   font-size: var(--text-md);
@@ -500,7 +487,7 @@
 
 .feat-desc {
   font-size: var(--text-base);
-  color: var(--color-text-3);
+  color: var(--color-text-2);
   line-height: 1.45;
   font-weight: var(--weight-regular);
 }
@@ -517,9 +504,8 @@
 }
 
 .badge-soon {
-  background: rgba(75, 86, 128, 0.18);
-  color: var(--color-muted);
-  border: 1px solid rgba(75, 86, 128, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-3);
 }
 
 /* User strip */
@@ -609,20 +595,23 @@
 }
 
 /* ══════════════════════════════════════
-   BOTTOM NAV — single persistent instance
-   Lives outside .screen divs in #app.
-   Hidden when login screen is active.
+   BOTTOM NAV — fixed to bottom of #app
+   position:fixed keeps it out of flex flow
+   entirely. max-width + left/right mirrors
+   the #app 480px container.
 ══════════════════════════════════════ */
 .bottom-nav {
-  flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  display: flex;
-  padding: var(--space-2) 0 max(env(safe-area-inset-bottom), var(--space-2));
-  position: relative;
-  z-index: 10;
-  /* Hidden by default — JS adds .nav-visible on login success */
   display: none;
+  padding: var(--space-2) 0 max(env(safe-area-inset-bottom), var(--space-2));
+  z-index: 20;
 }
 
 .bottom-nav.nav-visible { display: flex; }
@@ -666,24 +655,12 @@
 
 .nav-item.active .nav-indicator { background: var(--color-accent); }
 
-/* ══════════════════════════════════
-   TAB SCREENS (Aktivitas, Setting)
-   Need to reserve space for bottom nav
-   which is now a sibling outside .screen
-══════════════════════════════════════ */
-.tab-screen {
-  padding-bottom: 0; /* nav is outside, handled by #app flex */
-}
-
-/* ══════════════════════════════════
-   HOME SCREEN
-   Also a tab screen — needs bottom
-   nav sibling, so uses flex column
-══════════════════════════════════════ */
-.home-screen {
-  display: flex;
-  flex-direction: column;
-}
+/* ── Nav clearance — screens that show bottom nav ── */
+/* home-content and tab screen scroll areas need bottom
+   padding so content isn't hidden behind fixed nav.
+   Nav height ≈ 56px + safe area. 72px is safe.       */
+.home-content    { padding-bottom: 72px; }
+.tab-screen .scroll-area { padding-bottom: 72px; }
 
 /* ══════════════════════════════════
    AKTIVITAS + SETTING — Frost Bar screens
@@ -698,8 +675,6 @@
 /* scroll-area already in base.css; pane gives content padding */
 .screen-scroll-pane {
   padding: var(--space-4) var(--space-5) var(--space-8);
-  /* Enough content to test frost bar scroll on setting */
-  min-height: 110%;
 }
 
 /* ══════════════════════════════════
