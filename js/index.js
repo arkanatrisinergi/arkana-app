@@ -146,8 +146,10 @@ const IndexApp = (() => {
     document.querySelectorAll('.user-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('card-' + user).classList.add('selected');
 
-    document.querySelectorAll('.user-check').forEach(c => c.textContent = '');
-    document.querySelector('#card-' + user + ' .user-check').textContent = '✓';
+    // Toggle checkmark visibility via CSS class instead of textContent
+    // (preserves inline SVG in .user-check)
+    document.querySelectorAll('.user-check').forEach(c => c.classList.remove('checked'));
+    document.querySelector('#card-' + user + ' .user-check').classList.add('checked');
 
     document.getElementById('pin-label').textContent =
       `Masukkan PIN — ${USERS[user].name}`;
@@ -235,6 +237,9 @@ const IndexApp = (() => {
       logActivity('Login', `${user.name} masuk ke Arkana App`);
     }
 
+    // Show persistent bottom nav
+    document.getElementById('bottom-nav').classList.add('nav-visible');
+
     showScreen('home');
     // Reset nav indicators to home
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -254,6 +259,8 @@ const IndexApp = (() => {
     clearSession();
     selectedUser = 'arie';
     selectUser('arie');
+    // Hide bottom nav on logout
+    document.getElementById('bottom-nav').classList.remove('nav-visible');
     showScreen('login');
   }
 
@@ -573,6 +580,9 @@ const IndexApp = (() => {
     document.getElementById('modal-pin').addEventListener('click', (e) => {
       if (e.target === document.getElementById('modal-pin')) closeChangePIN();
     });
+
+    // PIN sheet drag-to-close
+    initSheetDrag('modal-pin', 'sheet-modal-pin', closeChangePIN);
   }
 
   // ─────────────────────────────────────────

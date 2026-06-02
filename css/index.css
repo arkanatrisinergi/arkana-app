@@ -38,7 +38,7 @@
   background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
-  animation: blob-drift-1 20s ease-in-out infinite alternate;
+  animation: blob-drift-1 10s ease-in-out infinite alternate;
   will-change: transform;
 }
 
@@ -51,22 +51,22 @@
   background: radial-gradient(circle, rgba(99, 102, 241, 0.09) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
-  animation: blob-drift-2 26s ease-in-out infinite alternate;
+  animation: blob-drift-2 13s ease-in-out infinite alternate;
   will-change: transform;
 }
 
 @keyframes blob-drift-1 {
   0%   { transform: translate(0, 0) scale(1); }
-  33%  { transform: translate(24px, 18px) scale(1.06); }
-  66%  { transform: translate(-12px, 32px) scale(0.96); }
-  100% { transform: translate(18px, -16px) scale(1.04); }
+  33%  { transform: translate(36px, 28px) scale(1.08); }
+  66%  { transform: translate(-18px, 44px) scale(0.94); }
+  100% { transform: translate(28px, -22px) scale(1.06); }
 }
 
 @keyframes blob-drift-2 {
   0%   { transform: translate(0, 0) scale(1); }
-  33%  { transform: translate(-20px, -24px) scale(1.05); }
-  66%  { transform: translate(16px, -10px) scale(0.97); }
-  100% { transform: translate(-24px, 20px) scale(1.03); }
+  33%  { transform: translate(-32px, -36px) scale(1.07); }
+  66%  { transform: translate(24px, -16px) scale(0.95); }
+  100% { transform: translate(-36px, 30px) scale(1.05); }
 }
 
 .login-inner {
@@ -236,6 +236,10 @@
   color: transparent;
 }
 
+/* SVG checkmark hidden until .checked applied by JS */
+.user-check svg { opacity: 0; transition: opacity var(--duration-fast); }
+.user-check.checked svg { opacity: 1; }
+
 .user-card.selected .user-check {
   background: var(--color-accent);
   border-color: var(--color-accent);
@@ -374,7 +378,7 @@
   background: radial-gradient(circle, rgba(59, 130, 246, 0.07) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
-  animation: blob-drift-2 22s ease-in-out infinite alternate;
+  animation: blob-drift-2 12s ease-in-out infinite alternate;
   will-change: transform;
 }
 
@@ -604,9 +608,11 @@
   letter-spacing: 0.05em;
 }
 
-/* ══════════════════════════════════
-   BOTTOM NAV
-══════════════════════════════════ */
+/* ══════════════════════════════════════
+   BOTTOM NAV — single persistent instance
+   Lives outside .screen divs in #app.
+   Hidden when login screen is active.
+══════════════════════════════════════ */
 .bottom-nav {
   flex-shrink: 0;
   background: var(--color-surface);
@@ -615,7 +621,11 @@
   padding: var(--space-2) 0 max(env(safe-area-inset-bottom), var(--space-2));
   position: relative;
   z-index: 10;
+  /* Hidden by default — JS adds .nav-visible on login success */
+  display: none;
 }
+
+.bottom-nav.nav-visible { display: flex; }
 
 .nav-item {
   flex: 1;
@@ -657,6 +667,25 @@
 .nav-item.active .nav-indicator { background: var(--color-accent); }
 
 /* ══════════════════════════════════
+   TAB SCREENS (Aktivitas, Setting)
+   Need to reserve space for bottom nav
+   which is now a sibling outside .screen
+══════════════════════════════════════ */
+.tab-screen {
+  padding-bottom: 0; /* nav is outside, handled by #app flex */
+}
+
+/* ══════════════════════════════════
+   HOME SCREEN
+   Also a tab screen — needs bottom
+   nav sibling, so uses flex column
+══════════════════════════════════════ */
+.home-screen {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ══════════════════════════════════
    AKTIVITAS + SETTING — Frost Bar screens
    .screen-scroll-pane = inner content padding
 ══════════════════════════════════ */
@@ -669,6 +698,8 @@
 /* scroll-area already in base.css; pane gives content padding */
 .screen-scroll-pane {
   padding: var(--space-4) var(--space-5) var(--space-8);
+  /* Enough content to test frost bar scroll on setting */
+  min-height: 110%;
 }
 
 /* ══════════════════════════════════
@@ -678,15 +709,16 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  padding-left: var(--space-5);
 }
 
-/* Timeline rail */
+/* Timeline rail — absolute, left-anchored */
 .log-list::before {
   content: '';
   position: absolute;
-  left: 15px;
-  top: var(--space-2);
-  bottom: var(--space-2);
+  left: 7px;
+  top: var(--space-3);
+  bottom: var(--space-3);
   width: 1px;
   background: var(--color-border);
 }
@@ -699,20 +731,21 @@
   position: relative;
 }
 
-/* Timeline dot — sits on the rail */
+/* Timeline dot — absolutely on the rail line */
 .log-dot {
+  position: absolute;
+  left: calc(var(--space-5) * -1 + 3px); /* centers 8px dot on 1px rail at left:7px */
+  top: calc(var(--space-3) + 5px);
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-  margin-top: 5px;
-  position: relative;
   z-index: 1;
   border: 1.5px solid var(--color-bg);
-  /* color set inline per user */
+  box-sizing: border-box;
 }
 
-.log-body { flex: 1; min-width: 0; padding-left: var(--space-1); }
+.log-body { flex: 1; min-width: 0; }
 
 .log-action {
   font-size: var(--text-lg);
@@ -743,7 +776,6 @@
   font-weight: var(--weight-medium);
   padding: 1px var(--space-2);
   border-radius: var(--radius-full);
-  /* color + background set inline per user */
 }
 
 .log-time {

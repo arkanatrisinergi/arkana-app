@@ -24,6 +24,7 @@
 
   <!-- ══════════════════════════════════════
        SCREEN: LOGIN
+       No bottom nav — standalone screen
   ══════════════════════════════════════ -->
   <div id="screen-login" class="screen active">
     <div class="login-bg"></div>
@@ -46,7 +47,7 @@
             <div class="user-name">Arie</div>
             <div class="user-role">Co-Founder</div>
           </div>
-          <div class="user-check">
+          <div class="user-check checked">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
         </div>
@@ -95,7 +96,7 @@
   <!-- ══════════════════════════════════════
        SCREEN: HOME
   ══════════════════════════════════════ -->
-  <div id="screen-home" class="screen">
+  <div id="screen-home" class="screen home-screen">
     <div class="home-bg"></div>
 
     <div class="home-header">
@@ -171,41 +172,17 @@
         <span id="home-version"></span>
       </div>
     </div>
-
-    <nav class="bottom-nav">
-      <div class="nav-item active" data-nav="home">
-        <span class="nav-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        <span class="nav-label">Home</span>
-        <div class="nav-indicator"></div>
-      </div>
-      <div class="nav-item" data-nav="aktivitas">
-        <span class="nav-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        <span class="nav-label">Aktivitas</span>
-        <div class="nav-indicator"></div>
-      </div>
-      <div class="nav-item" data-nav="setting">
-        <span class="nav-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.8"/></svg>
-        </span>
-        <span class="nav-label">Setting</span>
-        <div class="nav-indicator"></div>
-      </div>
-    </nav>
   </div>
 
   <!-- ══════════════════════════════════════
        SCREEN: AKTIVITAS
   ══════════════════════════════════════ -->
-  <div id="screen-aktivitas" class="screen">
+  <div id="screen-aktivitas" class="screen tab-screen">
     <div class="frost-bar" id="frost-aktivitas">
       <div class="topbar">
-        <div style="width:48px"></div>
+        <div class="back-btn" style="visibility:hidden"></div>
         <div class="topbar-title">Aktivitas</div>
-        <div style="width:48px"></div>
+        <div class="topbar-action" style="visibility:hidden"></div>
       </div>
     </div>
     <div class="scroll-area" id="scroll-aktivitas">
@@ -216,34 +193,17 @@
         </div>
       </div>
     </div>
-    <nav class="bottom-nav">
-      <div class="nav-item" data-nav="home">
-        <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span class="nav-label">Home</span>
-        <div class="nav-indicator"></div>
-      </div>
-      <div class="nav-item active" data-nav="aktivitas">
-        <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span class="nav-label">Aktivitas</span>
-        <div class="nav-indicator"></div>
-      </div>
-      <div class="nav-item" data-nav="setting">
-        <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.8"/></svg></span>
-        <span class="nav-label">Setting</span>
-        <div class="nav-indicator"></div>
-      </div>
-    </nav>
   </div>
 
   <!-- ══════════════════════════════════════
        SCREEN: SETTING
   ══════════════════════════════════════ -->
-  <div id="screen-setting" class="screen">
+  <div id="screen-setting" class="screen tab-screen">
     <div class="frost-bar" id="frost-setting">
       <div class="topbar">
-        <div style="width:48px"></div>
+        <div class="back-btn" style="visibility:hidden"></div>
         <div class="topbar-title">Setting</div>
-        <div style="width:48px"></div>
+        <div class="topbar-action" style="visibility:hidden"></div>
       </div>
     </div>
     <div class="scroll-area" id="scroll-setting">
@@ -292,24 +252,36 @@
         </div>
       </div>
     </div>
-    <nav class="bottom-nav">
-      <div class="nav-item" data-nav="home">
-        <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span class="nav-label">Home</span>
-        <div class="nav-indicator"></div>
-      </div>
-      <div class="nav-item" data-nav="aktivitas">
-        <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span class="nav-label">Aktivitas</span>
-        <div class="nav-indicator"></div>
-      </div>
-      <div class="nav-item active" data-nav="setting">
-        <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.8"/></svg></span>
-        <span class="nav-label">Setting</span>
-        <div class="nav-indicator"></div>
-      </div>
-    </nav>
   </div>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAV — single instance, persistent
+       Shown only when a tab screen is active.
+       Hidden on login screen via CSS.
+  ══════════════════════════════════════ -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <div class="nav-item active" data-nav="home">
+      <span class="nav-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="nav-label">Home</span>
+      <div class="nav-indicator"></div>
+    </div>
+    <div class="nav-item" data-nav="aktivitas">
+      <span class="nav-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="nav-label">Aktivitas</span>
+      <div class="nav-indicator"></div>
+    </div>
+    <div class="nav-item" data-nav="setting">
+      <span class="nav-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.8"/></svg>
+      </span>
+      <span class="nav-label">Setting</span>
+      <div class="nav-indicator"></div>
+    </div>
+  </nav>
 
 </div><!-- /#app -->
 
@@ -317,7 +289,7 @@
      CHANGE PIN SHEET — unified .overlay + .sheet
 ══════════════════════════════════════ -->
 <div class="overlay" id="modal-pin">
-  <div class="sheet">
+  <div class="sheet" id="sheet-modal-pin">
     <div class="sheet-handle"></div>
     <div class="sheet-title" id="modal-title">Ganti PIN</div>
     <div class="sheet-sub" id="modal-sub">Masukkan PIN lama kamu</div>
