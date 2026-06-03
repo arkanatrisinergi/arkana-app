@@ -55,16 +55,23 @@ const ExpenseApp = (() => {
     const scrollEl  = document.getElementById('scroll-main');
     const filtersEl = document.querySelector('.filters-wrap');
     if (!scrollEl || !filtersEl) return;
-    const DEADZONE = 4;
+    const DEADZONE         = 4;
+    const EXPAND_THRESHOLD = 8;   // scroll up must be intentional, not a bounce
+    const NEAR_BOTTOM_PX   = 50;  // within 50px of bottom = ignore expand (iOS rubber-band)
+
     scrollEl.addEventListener('scroll', () => {
-      const currentY = scrollEl.scrollTop;
-      const delta    = currentY - _lastScrollY;
+      const currentY     = scrollEl.scrollTop;
+      const delta        = currentY - _lastScrollY;
       if (Math.abs(delta) < DEADZONE) return;
+
+      const isNearBottom   = scrollEl.scrollHeight - currentY - scrollEl.clientHeight < NEAR_BOTTOM_PX;
       const shouldCollapse = delta > 0 && currentY > 10;
+      const shouldExpand   = delta < -EXPAND_THRESHOLD && !isNearBottom;
+
       if (shouldCollapse && _filterVisible) {
         filtersEl.classList.add('filters-collapsed');
         _filterVisible = false;
-      } else if (!shouldCollapse && !_filterVisible) {
+      } else if (shouldExpand && !_filterVisible) {
         filtersEl.classList.remove('filters-collapsed');
         _filterVisible = true;
       }

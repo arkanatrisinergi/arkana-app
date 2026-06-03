@@ -96,23 +96,27 @@ const SupplierTracker = (() => {
     const accordionEl = document.getElementById('filter-accordion-suppliers');
     if (!scrollEl || !accordionEl) return;
 
-    const DEADZONE = 4;
+    const DEADZONE         = 4;
+    const EXPAND_THRESHOLD = 8;   // scroll up must be intentional, not a bounce
+    const NEAR_BOTTOM_PX   = 50;  // within 50px of bottom = ignore expand (iOS rubber-band)
 
     scrollEl.addEventListener('scroll', () => {
       // Only collapse when on Suppliers tab
       if (currentTab !== TAB.SUPPLIERS) return;
 
-      const currentY = scrollEl.scrollTop;
-      const delta    = currentY - _supplierLastScrollY;
+      const currentY     = scrollEl.scrollTop;
+      const delta        = currentY - _supplierLastScrollY;
 
       if (Math.abs(delta) < DEADZONE) return;
 
+      const isNearBottom   = scrollEl.scrollHeight - currentY - scrollEl.clientHeight < NEAR_BOTTOM_PX;
       const shouldCollapse = delta > 0 && currentY > 10;
+      const shouldExpand   = delta < -EXPAND_THRESHOLD && !isNearBottom;
 
       if (shouldCollapse && _supplierFilterVisible) {
         accordionEl.classList.add('filters-collapsed');
         _supplierFilterVisible = false;
-      } else if (!shouldCollapse && !_supplierFilterVisible) {
+      } else if (shouldExpand && !_supplierFilterVisible) {
         accordionEl.classList.remove('filters-collapsed');
         _supplierFilterVisible = true;
       }
