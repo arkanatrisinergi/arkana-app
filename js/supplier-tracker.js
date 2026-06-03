@@ -25,6 +25,10 @@ const SupplierTracker = (() => {
 
   let DB = { suppliers: [], products: [], priceEntries: [], units: [] };
 
+  // Scroll-driven filter collapse (PRD-00.4-F)
+  let _supplierLastScrollY   = 0;
+  let _supplierFilterVisible = true;
+
   // ─────────────────────────────────────────
   // INIT
   // ─────────────────────────────────────────
@@ -71,16 +75,51 @@ const SupplierTracker = (() => {
       await fetchAll();
     };
     // PTR must target the actual scroll container (#scroll-main),
-    // not the inner pane divs which don't scroll themselves.
+    // not the inner pane divids which don't scroll themselves.
     initPullToRefresh(
       document.getElementById('scroll-main'),
       _doRefresh
     );
+
+    // Scroll-driven filter collapse
+    _initFilterCollapse();
   }
 
   // ─────────────────────────────────────────
-  // API / DATA
+  // SCROLL-DRIVEN FILTER COLLAPSE (PRD-00.4-F)
+  // Filter accordion in scroll content — collapse on
+  // scroll down, expand on scroll up.
+  // Only active when Suppliers tab is visible.
   // ─────────────────────────────────────────
+  function _initFilterCollapse() {
+    const scrollEl    = document.getElementById('scroll-main');
+    const accordionEl = document.getElementById('filter-accordion-suppliers');
+    if (!scrollEl || !accordionEl) return;
+
+    const DEADZONE = 4;
+
+    scrollEl.addEventListener('scroll', () => {
+      // Only collapse when on Suppliers tab
+      if (currentTab !== TAB.SUPPLIERS) return;
+
+      const currentY = scrollEl.scrollTop;
+      const delta    = currentY - _supplierLastScrollY;
+
+      if (Math.abs(delta) < DEADZONE) return;
+
+      const shouldCollapse = delta > 0 && currentY > 10;
+
+      if (shouldCollapse && _supplierFilterVisible) {
+        accordionEl.classList.add('filters-collapsed');
+        _supplierFilterVisible = false;
+      } else if (!shouldCollapse && !_supplierFilterVisible) {
+        accordionEl.classList.remove('filters-collapsed');
+        _supplierFilterVisible = true;
+      }
+
+      _supplierLastScrollY = currentY;
+    }, { passive: true });
+  }
   async function fetchAll() {
     try {
       const data = await api('getAll');
@@ -537,6 +576,14 @@ const SupplierTracker = (() => {
     });
     document.getElementById('fab-btn').style.display = tab === TAB.COMPARE ? 'none' : '';
     if (tab === TAB.JASA) renderJasa();
+
+    // Reset filter accordion when returning to Suppliers tab
+    if (tab === TAB.SUPPLIERS) {
+      const accordionEl = document.getElementById('filter-accordion-suppliers');
+      if (accordionEl) accordionEl.classList.remove('filters-collapsed');
+      _supplierFilterVisible = true;
+      _supplierLastScrollY   = 0;
+    }
   }
 
   // ─────────────────────────────────────────

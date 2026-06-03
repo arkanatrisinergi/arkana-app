@@ -20,6 +20,10 @@ const ExpenseApp = (() => {
   let _fTipe   = '';
   let _fMetode = '';
 
+  // Scroll-driven filter collapse (PRD-00.4-F)
+  let _lastScrollY   = 0;
+  let _filterVisible = true;
+
   const CACHE_KEY_EXPENSES = 'expenses';
   const CACHE_KEY_PROJECTS = 'projects';
 
@@ -39,6 +43,33 @@ const ExpenseApp = (() => {
     // Sheet drag-to-close
     initSheetDrag('overlay-expense', 'overlay-expense > .sheet');
     initSheetDrag('overlay-detail',  'overlay-detail > .sheet');
+
+    // Scroll-driven filter collapse
+    _initFilterCollapse();
+  }
+
+  // ─────────────────────────────────────────
+  // SCROLL-DRIVEN FILTER COLLAPSE (PRD-00.4-F)
+  // ─────────────────────────────────────────
+  function _initFilterCollapse() {
+    const scrollEl  = document.getElementById('scroll-main');
+    const filtersEl = document.querySelector('.filters-wrap');
+    if (!scrollEl || !filtersEl) return;
+    const DEADZONE = 4;
+    scrollEl.addEventListener('scroll', () => {
+      const currentY = scrollEl.scrollTop;
+      const delta    = currentY - _lastScrollY;
+      if (Math.abs(delta) < DEADZONE) return;
+      const shouldCollapse = delta > 0 && currentY > 10;
+      if (shouldCollapse && _filterVisible) {
+        filtersEl.classList.add('filters-collapsed');
+        _filterVisible = false;
+      } else if (!shouldCollapse && !_filterVisible) {
+        filtersEl.classList.remove('filters-collapsed');
+        _filterVisible = true;
+      }
+      _lastScrollY = currentY;
+    }, { passive: true });
   }
 
   function _requireAuth() {

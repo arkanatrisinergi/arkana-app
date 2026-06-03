@@ -7,17 +7,34 @@
    Filters-wrap moved inside frost-bar in HTML.
    PRD-00.4-D: Expense card redesigned — single column
    layout, amount as hero, date + badges below divider.
+   PRD-00.4-F: Scroll-driven filter collapse. Shrinks
+   from bottom to top on scroll down, expands on scroll up.
    ═══════════════════════════════════════════════════ */
 
 /* ── Filters wrap — inside frost bar ── */
 /* Sits below tab-bar, inside .frost-bar glass container        */
 /* Side padding removed — .filter-scroll handles its own inset  */
+/* max-height set tight (3 rows × ~36px + padding ≈ 140px) so  */
+/* transition feels snappy — not animating dead space.          */
 .filters-wrap {
   padding-block: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   border-top: 0.5px solid var(--color-border-glass-inner);
+  max-height: 140px;
+  opacity: 1;
+  overflow: hidden;
+  /* Collapse: quick shrink. Expand: slightly slower for natural feel. */
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease,
+              padding-block 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filters-wrap.filters-collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-block: 0;
 }
 
 /* .filter-chip and .filter-scroll canonical styles in base.css */
