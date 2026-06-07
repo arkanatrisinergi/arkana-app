@@ -210,13 +210,43 @@ const ChatApp = (() => {
   // AI CALL
   // ─────────────────────────────────────────
   async function _callAI(userText) {
-    // Build Gemini contents array — last 20 messages
-    // Gemini uses 'user' and 'model' roles (not 'assistant')
+    // Build Gemini contents array — last 20 messages.
+    // Gemini is strict: no empty text, must alternate user/model, must end with user.
     const historySlice = _messages.slice(-20);
-    const contents = historySlice.map(m => ({
-      role:  m.role === 'user' ? 'user' : 'model',
-      parts: [{ text: m.text || (m.confirmData ? '[Kartu konfirmasi ditampilkan]' : '...') }]
+
+    // Step 1: map to role + text, skip empty-text messages
+    let contents = historySlice
+      .map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        text: m.text || (m.confirmData ? '[Konfirmasi supplier ditampilkan]' : '')
+      }))
+      .filter(m => m.text.trim() !== '');
+
+    // Step 2: enforce alternation — if two consecutive same-role, keep the later one
+    contents = contents.reduce((acc, m) => {
+      if (acc.length > 0 && acc[acc.length - 1].role === m.role) {
+        acc[acc.length - 1] = m;
+      } else {
+        acc.push(m);
+      }
+      return acc;
+    }, []);
+
+    // Step 3: must end with user turn — drop trailing model message if any
+    if (contents.length > 0 && contents[contents.length - 1].role === 'model') {
+      contents.pop();
+    }
+
+    // Step 4: convert to Gemini parts format
+    contents = contents.map(m => ({
+      role:  m.role,
+      parts: [{ text: m.text }]
     }));
+
+    // Safety: if contents is empty, send just the current user message
+    if (contents.length === 0) {
+      contents = [{ role: 'user', parts: [{ text: userText }] }];
+    }
 
     // Inject supplier cache as context for lookup intent
     let supplierContext = '';
