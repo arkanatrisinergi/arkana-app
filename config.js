@@ -16,7 +16,7 @@ const APP_VERSION       = '2.1.0';
 // Gemini AI — used by chat.js (Arkana AI feature)
 // Get your key at: aistudio.google.com → Get API key
 // Replace the placeholder below with your actual key before deploying.
-const GEMINI_API_KEY    = 'AQ.Ab8RN6IJQVE0NqtaVgrf_CM-ddyHTC5ErgjhB8zeDdkpk89i0A';
+const GEMINI_API_KEY    = 'AIzaSyAoreUfmVJM94jIfK26YNDPYgReD3cQzL8';
 
 // Unit bisnis — single source of truth.
 // Used by: chat.js (AI system prompt), supplier form, expense form.

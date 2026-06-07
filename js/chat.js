@@ -73,16 +73,22 @@ const ChatApp = (() => {
   }
 
   function _clearHistory() {
-    showConfirm(
-      'Hapus Riwayat Chat',
-      'Semua pesan akan dihapus. Lanjutkan?',
-      () => {
-        _messages = [];
-        _pendingConfirm = null;
-        localStorage.removeItem(STORAGE_KEY.CHAT_HISTORY);
-        _render();
-      }
-    );
+    const overlay = document.getElementById('chat-clear-overlay');
+    if (overlay) overlay.classList.add('active');
+  }
+
+  function _clearHistoryConfirmed() {
+    _messages = [];
+    _pendingConfirm = null;
+    localStorage.removeItem(STORAGE_KEY.CHAT_HISTORY);
+    _closeClearOverlay();
+    _render();
+    showToast('Riwayat chat dihapus', 'success');
+  }
+
+  function _closeClearOverlay() {
+    const overlay = document.getElementById('chat-clear-overlay');
+    if (overlay) overlay.classList.remove('active');
   }
 
   // ─────────────────────────────────────────
@@ -424,15 +430,11 @@ PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesud
       if (action === 'cancel') _confirmCancel(msgId);
     });
 
-    // Confirm dialog (base.css showConfirm uses these)
-    document.getElementById('confirm-cancel')?.addEventListener('click', closeConfirm);
-    document.getElementById('confirm-ok')?.addEventListener('click', () => {
-      const fn = window._confirmOkFn;
-      if (fn) { fn(); window._confirmOkFn = null; }
-      closeConfirm();
-    });
-    document.getElementById('confirm-overlay')?.addEventListener('click', (e) => {
-      if (e.target === document.getElementById('confirm-overlay')) closeConfirm();
+    // Clear history inline overlay buttons
+    document.getElementById('chat-clear-confirm-ok')?.addEventListener('click', _clearHistoryConfirmed);
+    document.getElementById('chat-clear-confirm-cancel')?.addEventListener('click', _closeClearOverlay);
+    document.getElementById('chat-clear-overlay')?.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('chat-clear-overlay')) _closeClearOverlay();
     });
   }
 
