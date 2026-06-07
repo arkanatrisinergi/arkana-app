@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/index.css">
-  <script src="config.js?v=2.0.12"></script>
+  <script src="config.js?v=2.1.0"></script>
   <script src="js/constants.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/app.js"></script>
@@ -283,6 +283,65 @@
     </div>
   </nav>
 
+
+  <!-- ══════════════════════════════════════
+       CHAT FAB — home screen only
+       Shown post-login via .fab-visible class.
+  ══════════════════════════════════════ -->
+  <button class="chat-fab" id="chat-fab" aria-label="Arkana AI">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: CHAT — Arkana AI
+  ══════════════════════════════════════ -->
+  <div id="screen-chat" class="screen">
+    <div class="frost-bar" id="frost-chat">
+      <div class="topbar">
+        <div class="back-btn" id="chat-back-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="topbar-title">Arkana AI</div>
+        <div class="topbar-action" id="chat-clear-btn" title="Hapus riwayat chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll-area" id="scroll-chat">
+      <div class="chat-messages" id="chat-messages">
+        <!-- Rendered by ChatApp -->
+      </div>
+    </div>
+
+    <div class="chat-input-bar" id="chat-input-bar">
+      <div class="chat-input-wrap">
+        <textarea
+          class="chat-textarea"
+          id="chat-textarea"
+          placeholder="Ketik pesan..."
+          rows="1"
+        ></textarea>
+      </div>
+      <button class="chat-send-btn" id="chat-send-btn" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 2L15 22 11 13 2 9l20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
 </div><!-- /#app -->
 
 <!-- ══════════════════════════════════════
@@ -351,6 +410,7 @@
   document.addEventListener('DOMContentLoaded', function() {
     initFrostBar('frost-aktivitas', 'scroll-aktivitas');
     initFrostBar('frost-setting',   'scroll-setting');
+    initFrostBar('frost-chat',       'scroll-chat');
   });
 })();
 </script>

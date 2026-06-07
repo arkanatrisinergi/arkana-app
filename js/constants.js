@@ -37,11 +37,12 @@ const SCREEN = Object.freeze({
 });
 
 const STORAGE_KEY = Object.freeze({
-  SESSION:  'arkana_session',
-  CACHE:    'arkana_cache',
-  LOG:      'arkana_activity_log',
-  AVATAR:   'arkana_avatar',
-  PIN:      'arkana_pin'
+  SESSION:      'arkana_session',
+  CACHE:        'arkana_cache',
+  LOG:          'arkana_activity_log',
+  AVATAR:       'arkana_avatar',
+  PIN:          'arkana_pin',
+  CHAT_HISTORY: 'arkana_chat_history'   // PRD-05-A
 });
 
 const SUPPLIER_COLORS = Object.freeze([

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════
-// Arkana App — Component Library  v2.1.0
+// Arkana App — Component Library  v2.2.0
 // UI.* — pure functions returning HTML strings.
 // No DOM access. No side effects. Input in, HTML out.
 //
@@ -45,6 +45,17 @@
 // UI.card.project(project)
 //   Project list card HTML.
 //
+// UI.chat.bubble(msg)
+//   Single chat message bubble. msg = { role, text, time, isError }
+//
+// UI.chat.confirmCard(data, msgId)
+//   Supplier confirmation card before submission.
+//   data = { name, level, kota, kontak, units, catatan }
+//   msgId = unique id for button binding
+//
+// UI.chat.templateChips(userName)
+//   Pre-chat template chips shown when history is empty.
+//
 // ═══════════════════════════════════════════════════
 
 const UI = (() => {
@@ -76,16 +87,16 @@ const UI = (() => {
     return 'Rp ' + (parseFloat(val) || 0).toLocaleString('id-ID');
   }
 
+  function _fmtTime(isoStr) {
+    const d = new Date(isoStr);
+    if (isNaN(d)) return '';
+    return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  }
+
   // ─────────────────────────────────────────
   // UI.emptyState
   // ─────────────────────────────────────────
 
-  /**
-   * Generic empty state panel.
-   * @param {string} icon  — Emoji icon
-   * @param {string} text  — Message text (may contain <br>)
-   * @returns {string} HTML
-   */
   function emptyState(icon, text) {
     return `<div class="empty-state">
       <div class="empty-icon">${icon}</div>
@@ -95,15 +106,10 @@ const UI = (() => {
 
   // ─────────────────────────────────────────
   // UI.badge.*
-  // All badge functions return inline HTML strings.
   // ─────────────────────────────────────────
 
   const badge = {
 
-    /**
-     * Supplier level badge.
-     * @param {string} level  — 'L1' | 'L2' | 'L3' | 'L4' | 'Jasa'
-     */
     level(level) {
       const isJasa = level === 'Jasa';
       const cls = isJasa ? 'jasa' : level.toLowerCase();
@@ -111,15 +117,10 @@ const UI = (() => {
       return `<span class="level-badge ${cls}">${label}</span>`;
     },
 
-    /** "✓ Authorized" green badge */
     auth() {
       return `<span class="auth-badge">✓ Authorized</span>`;
     },
 
-    /**
-     * Expense payment method badge.
-     * @param {string} metode  — METODE_BAYAR constant value
-     */
     metode(metode) {
       if (metode === 'kas_perusahaan')
         return `<span class="badge badge-kas">🏦 Kas Perusahaan</span>`;
@@ -130,10 +131,6 @@ const UI = (() => {
       return '';
     },
 
-    /**
-     * Project status badge.
-     * @param {string} status  — 'active' | 'closed'
-     */
     status(status) {
       const isActive = status === 'active';
       const cls   = isActive ? 'status-active' : 'status-closed';
@@ -141,31 +138,18 @@ const UI = (() => {
       return `<span class="status-badge ${cls}">${label}</span>`;
     },
 
-    /**
-     * Expense category badge.
-     * @param {string} label
-     */
     kategori(label) {
       return `<span class="badge badge-kategori">${_esc(label)}</span>`;
     },
 
-    /** Reimburse flag badge */
     reimburse() {
       return `<span class="badge badge-reimburse">↩ Reimburse</span>`;
     },
 
-    /**
-     * Project tag badge on expense cards.
-     * @param {string} label  — Project name or fallback
-     */
     proyek(label) {
       return `<span class="badge badge-proyek">📁 ${_esc(label)}</span>`;
     },
 
-    /**
-     * Unit bisnis badge on supplier cards.
-     * @param {string} label
-     */
     unit(label) {
       return `<span class="unit-badge">${_esc(label)}</span>`;
     }
@@ -174,19 +158,10 @@ const UI = (() => {
 
   // ─────────────────────────────────────────
   // UI.card.*
-  // Full card HTML for list rendering.
   // ─────────────────────────────────────────
 
   const card = {
 
-    /**
-     * Supplier list card.
-     * PRD-00.4-D: added .supplier-divider between info and badges.
-     * Meta text promoted to mono. Count chips quieted to neutral.
-     * @param {object} supplier  — Supplier record from DB
-     * @param {object} countMap  — { [supplierId]: { produk: n, jasa: n } }
-     * @returns {string} HTML
-     */
     supplier(supplier, countMap = {}) {
       const s        = supplier;
       const initials = s.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
@@ -220,15 +195,6 @@ const UI = (() => {
       </div>`;
     },
 
-    /**
-     * Expense list card.
-     * PRD-00.4-D: layout changed from flex row to single column.
-     * Amount is now the hero — full width, dominant size.
-     * Date + badges sit below a hairline divider.
-     * @param {object} expense   — Expense record
-     * @param {Array}  projects  — Projects array for name lookup
-     * @returns {string} HTML
-     */
     expense(expense, projects = []) {
       const e = expense;
 
@@ -236,7 +202,6 @@ const UI = (() => {
         ? projects.find(p => p.id === e.projectId)
         : null;
 
-      // Pass raw string — badge.kategori handles escaping internally
       const kategoriLabel = (e.kategori === 'Lain-lain' && e.customKategori)
         ? e.customKategori
         : (e.kategori || '—');
@@ -266,13 +231,6 @@ const UI = (() => {
       </div>`;
     },
 
-    /**
-     * Project list card.
-     * PRD-00.4-D: stripe color driven by status (green=active, neutral=closed).
-     * Name weight increased. Unit demoted to plain mono text (no chip).
-     * @param {object} project  — Project record
-     * @returns {string} HTML
-     */
     project(project) {
       const p = project;
       const isClosed = p.status === 'closed';
@@ -293,8 +251,125 @@ const UI = (() => {
   };
 
   // ─────────────────────────────────────────
+  // UI.chat.*
+  // PRD-05-A: Arkana AI chat components.
+  // ─────────────────────────────────────────
+
+  const chat = {
+
+    /**
+     * Single chat bubble.
+     * @param {object} msg
+     *   msg.role    — 'user' | 'ai'
+     *   msg.text    — message text (newlines rendered as <br>)
+     *   msg.time    — ISO timestamp string
+     *   msg.isError — boolean, renders error style on AI bubble
+     *   msg.html    — optional raw HTML content (for confirm cards embedded in bubble)
+     */
+    bubble(msg) {
+      const isUser  = msg.role === 'user';
+      const timeStr = msg.time ? _fmtTime(msg.time) : '';
+      const content = msg.html
+        ? msg.html
+        : `<div class="chat-bubble-text">${_esc(msg.text).replace(/\n/g, '<br>')}</div>`;
+
+      const errorClass = (!isUser && msg.isError) ? ' chat-bubble-error' : '';
+
+      return `<div class="chat-msg chat-msg-${isUser ? 'user' : 'ai'}">
+        <div class="chat-bubble${errorClass}">
+          ${content}
+        </div>
+        ${timeStr ? `<div class="chat-time">${timeStr}</div>` : ''}
+      </div>`;
+    },
+
+    /**
+     * Supplier confirmation card — rendered inside an AI bubble.
+     * @param {object} data   — { name, level, kota, kontak, units, catatan }
+     * @param {string} msgId  — unique string used for button data attributes
+     */
+    confirmCard(data, msgId) {
+      const levelLabel = {
+        L1: 'L1 · Pabrik',
+        L2: 'L2 · Distributor Resmi',
+        L3: 'L3 · Grosir',
+        L4: 'L4 · Retail',
+        Jasa: 'Jasa'
+      }[data.level] || data.level;
+
+      const unitsStr = Array.isArray(data.units)
+        ? data.units.join(', ')
+        : (data.units || '—');
+
+      return `<div class="chat-confirm-card">
+        <div class="chat-confirm-title">Konfirmasi Supplier Baru</div>
+        <div class="chat-confirm-divider"></div>
+        <div class="chat-confirm-rows">
+          <div class="chat-confirm-row">
+            <span class="chat-confirm-label">Nama</span>
+            <span class="chat-confirm-value">${_esc(data.name)}</span>
+          </div>
+          <div class="chat-confirm-row">
+            <span class="chat-confirm-label">Level</span>
+            <span class="chat-confirm-value">${_esc(levelLabel)}</span>
+          </div>
+          <div class="chat-confirm-row">
+            <span class="chat-confirm-label">Kota</span>
+            <span class="chat-confirm-value">${_esc(data.kota)}</span>
+          </div>
+          <div class="chat-confirm-row">
+            <span class="chat-confirm-label">Kontak</span>
+            <span class="chat-confirm-value">${_esc(data.kontak)}</span>
+          </div>
+          <div class="chat-confirm-row">
+            <span class="chat-confirm-label">Unit</span>
+            <span class="chat-confirm-value">${_esc(unitsStr)}</span>
+          </div>
+          ${data.catatan ? `<div class="chat-confirm-row">
+            <span class="chat-confirm-label">Catatan</span>
+            <span class="chat-confirm-value">${_esc(data.catatan)}</span>
+          </div>` : ''}
+        </div>
+        <div class="chat-confirm-divider"></div>
+        <div class="chat-confirm-actions">
+          <button class="chat-confirm-btn chat-confirm-cancel" data-confirm-id="${_esc(msgId)}" data-action="cancel">Batalkan</button>
+          <button class="chat-confirm-btn chat-confirm-save"   data-confirm-id="${_esc(msgId)}" data-action="save">✓ Simpan</button>
+        </div>
+      </div>`;
+    },
+
+    /**
+     * Pre-chat template chips — shown when chat history is empty.
+     * @param {string} userName — greeting name
+     */
+    templateChips(userName) {
+      return `<div class="chat-welcome">
+        <div class="chat-welcome-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="chat-welcome-title">Arkana AI</div>
+        <div class="chat-welcome-sub">Halo, ${_esc(userName)}! Ada yang bisa Arkana bantu?</div>
+        <div class="chat-templates">
+          <button class="chat-template-chip" data-template="Tambah Supplier Baru">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Tambah Supplier Baru
+          </button>
+          <button class="chat-template-chip" data-template="Cari Supplier">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Cari Supplier
+          </button>
+        </div>
+      </div>`;
+    }
+
+  };
+
+  // ─────────────────────────────────────────
   // PUBLIC API
   // ─────────────────────────────────────────
-  return { emptyState, badge, card };
+  return { emptyState, badge, card, chat };
 
 })();
