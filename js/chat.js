@@ -2,7 +2,10 @@
 // Arkana App — Chat JS  v2.1.0
 // PRD-05-A: Arkana AI — standalone page module.
 // Runs on chat.html. Redirects to index.html if no session.
-// Depends on: constants.js, utils.js, app.js, components.js
+// Depends on: config.js, constants.js, utils.js, app.js, components.js
+//
+// AI: Google Gemini 2.0 Flash via GEMINI_API_KEY in config.js
+// Units: reads UNITS_BISNIS from config.js — no hardcoded list here
 // ═══════════════════════════════════════════════════
 
 const ChatApp = (() => {
@@ -12,6 +15,10 @@ const ChatApp = (() => {
   // ─────────────────────────────────────────
   const MAX_HISTORY  = 50;
   const TYPING_DELAY = 500;
+
+  // Gemini endpoint — key injected from config.js
+  const GEMINI_URL = () =>
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
   // ─────────────────────────────────────────
   // STATE
@@ -72,17 +79,27 @@ const ChatApp = (() => {
     }
   }
 
+  // ─────────────────────────────────────────
+  // CLEAR HISTORY
+  // Uses inline confirm dialog — no dependency on showConfirm()
+  // ─────────────────────────────────────────
   function _clearHistory() {
-    showConfirm(
-      'Hapus Riwayat Chat',
-      'Semua pesan akan dihapus. Lanjutkan?',
-      () => {
-        _messages = [];
-        _pendingConfirm = null;
-        localStorage.removeItem(STORAGE_KEY.CHAT_HISTORY);
-        _render();
-      }
-    );
+    const overlay = document.getElementById('chat-clear-overlay');
+    if (overlay) overlay.classList.add('active');
+  }
+
+  function _clearHistoryConfirmed() {
+    _messages = [];
+    _pendingConfirm = null;
+    localStorage.removeItem(STORAGE_KEY.CHAT_HISTORY);
+    _closeClearOverlay();
+    _render();
+    showToast('Riwayat chat dihapus', 'success');
+  }
+
+  function _closeClearOverlay() {
+    const overlay = document.getElementById('chat-clear-overlay');
+    if (overlay) overlay.classList.remove('active');
   }
 
   // ─────────────────────────────────────────
@@ -118,10 +135,8 @@ const ChatApp = (() => {
   function _showTyping() {
     const container = document.getElementById('chat-messages');
     if (!container) return;
-    // Remove existing typing indicator if any
     const existing = document.getElementById('chat-typing');
     if (existing) existing.remove();
-
     const el = document.createElement('div');
     el.className = 'chat-typing';
     el.id = 'chat-typing';
@@ -201,30 +216,36 @@ const ChatApp = (() => {
   }
 
   // ─────────────────────────────────────────
-  // AI CALL
+  // AI CALL — Google Gemini 2.0 Flash
   // ─────────────────────────────────────────
   async function _callAI(userText) {
-    // Last 20 messages as conversation history
+    // Build conversation history — last 20 messages
+    // Gemini uses 'user' and 'model' roles (not 'assistant')
     const historySlice = _messages.slice(-20);
-    const conversationHistory = historySlice.map(m => ({
-      role:    m.role === 'user' ? 'user' : 'assistant',
-      content: m.text || (m.confirmData ? '[Kartu konfirmasi ditampilkan]' : '...')
+    const contents = historySlice.map(m => ({
+      role:  m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.text || (m.confirmData ? '[Kartu konfirmasi ditampilkan]' : '...') }]
     }));
 
-    // Inject supplier cache as context for lookup
+    // Inject supplier cache as context for lookup intent
     let supplierContext = '';
     try {
       const cached = loadFromCache('supplier');
       if (cached && cached.data && cached.data.suppliers) {
-        const names = cached.data.suppliers
+        const list = cached.data.suppliers
           .slice(0, 40)
-          .map(s => `${s.name} (${s.level}, ${s.kota || '-'}, unit: ${(s.units||[]).join('/')})`)
+          .map(s => `${s.name} (${s.level}, ${s.kota || '-'}, unit: ${(s.units || []).join('/')})`)
           .join('; ');
-        supplierContext = `\n\nData supplier yang sudah ada (${cached.data.suppliers.length} total): ${names}`;
+        supplierContext = `\n\nData supplier yang sudah ada (${cached.data.suppliers.length} total): ${list}`;
       }
     } catch (e) { /* no cache — skip */ }
 
-    const systemPrompt = `Kamu adalah Arkana AI, asisten operasional untuk CV Arkana Trisinergi.
+    // UNITS_BISNIS read from config.js — single source of truth
+    const unitsList = (typeof UNITS_BISNIS !== 'undefined' ? UNITS_BISNIS : [
+      'IT & Elektronik', 'Medis & Kesehatan', 'Logistik', 'Energi', 'Konstruksi', 'Umum'
+    ]).join(', ');
+
+    const systemInstruction = `Kamu adalah Arkana AI, asisten operasional untuk CV Arkana Trisinergi.
 Kamu hanya bisa membantu dua hal:
 1. Tambah supplier baru
 2. Cari/lookup supplier yang sudah ada
@@ -238,7 +259,7 @@ Untuk TAMBAH SUPPLIER, kumpulkan field berikut satu per satu jika belum ada:
 - level: harus salah satu dari L1, L2, L3, L4, atau Jasa — WAJIB
   (L1 = Pabrik, L2 = Distributor Resmi, L3 = Grosir, L4 = Retail, Jasa = Penyedia Jasa)
 - units (unit bisnis, boleh lebih dari satu) — WAJIB
-  Pilihan: IT & Elektronik, Medis & Kesehatan, Logistik, Energi, Konstruksi, Umum
+  Pilihan: ${unitsList}
 - catatan — OPSIONAL
 
 Tanya 1-2 field yang belum ada per giliran. Jangan tanya semua sekaligus.
@@ -253,22 +274,33 @@ Jika permintaan di luar dua topik ini, balas:
 
 PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesudah JSON.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(GEMINI_URL(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system:     systemPrompt,
-        messages:   conversationHistory
+        system_instruction: {
+          parts: [{ text: systemInstruction }]
+        },
+        contents: contents,
+        generationConfig: {
+          maxOutputTokens: 1000,
+          temperature:     0.3   // low temp = more predictable JSON output
+        }
       })
     });
 
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'API error ' + response.status);
 
-    const textBlock = (data.content || []).find(b => b.type === 'text');
-    return textBlock ? textBlock.text.trim() : '';
+    if (!response.ok) {
+      const errMsg = data.error?.message || ('API error ' + response.status);
+      throw new Error(errMsg);
+    }
+
+    // Gemini response shape: candidates[0].content.parts[0].text
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('Empty response from Gemini');
+
+    return text.trim();
   }
 
   // ─────────────────────────────────────────
@@ -367,8 +399,15 @@ PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesud
       window.location.href = 'index.html';
     });
 
-    // Clear history
+    // Clear history — opens inline confirm overlay
     document.getElementById('chat-clear-btn')?.addEventListener('click', _clearHistory);
+
+    // Clear confirm overlay buttons
+    document.getElementById('chat-clear-confirm-ok')?.addEventListener('click', _clearHistoryConfirmed);
+    document.getElementById('chat-clear-confirm-cancel')?.addEventListener('click', _closeClearOverlay);
+    document.getElementById('chat-clear-overlay')?.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('chat-clear-overlay')) _closeClearOverlay();
+    });
 
     // Textarea — auto-grow + send state
     const ta = document.getElementById('chat-textarea');
@@ -392,7 +431,7 @@ PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesud
       if (ta) sendMessage(ta.value);
     });
 
-    // Confirm card buttons — event delegation on messages container
+    // Confirm card buttons — event delegation
     document.getElementById('chat-messages')?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-confirm-id]');
       if (!btn) return;
@@ -400,17 +439,6 @@ PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesud
       const action = btn.dataset.action;
       if (action === 'save')   _confirmSave(msgId);
       if (action === 'cancel') _confirmCancel(msgId);
-    });
-
-    // Confirm dialog (base.css showConfirm uses these)
-    document.getElementById('confirm-cancel')?.addEventListener('click', closeConfirm);
-    document.getElementById('confirm-ok')?.addEventListener('click', () => {
-      const fn = window._confirmOkFn;
-      if (fn) { fn(); window._confirmOkFn = null; }
-      closeConfirm();
-    });
-    document.getElementById('confirm-overlay')?.addEventListener('click', (e) => {
-      if (e.target === document.getElementById('confirm-overlay')) closeConfirm();
     });
   }
 

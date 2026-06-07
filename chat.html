@@ -75,13 +75,24 @@
 
 </div><!-- /#app -->
 
+<!-- ══════════════════════════════════════
+     CLEAR CHAT CONFIRM — inline overlay
+     Wired directly in chat.js, no showConfirm() dependency.
+══════════════════════════════════════ -->
+<div class="confirm-overlay" id="chat-clear-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title">Bersihkan Riwayat Pesan?</div>
+    <div class="confirm-msg">Semua pesan akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.</div>
+    <div class="confirm-btns">
+      <button class="btn btn-secondary" id="chat-clear-confirm-cancel">Batal</button>
+      <button class="btn btn-danger"    id="chat-clear-confirm-ok">Hapus</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- Confirm dialog (from base.css) -->
-<div class="confirm-overlay" id="confirm-overlay">
-  <div class="confirm-box">
-    <div class="confirm-title" id="confirm-title"></div>
     <div class="confirm-msg"   id="confirm-msg"></div>
     <div class="confirm-btns">
       <button class="btn btn-secondary" id="confirm-cancel">Batal</button>
