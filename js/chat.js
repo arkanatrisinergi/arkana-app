@@ -2,10 +2,7 @@
 // Arkana App — Chat JS  v2.1.0
 // PRD-05-A: Arkana AI — standalone page module.
 // Runs on chat.html. Redirects to index.html if no session.
-// Depends on: config.js, constants.js, utils.js, app.js, components.js
-//
-// AI: Google Gemini 2.0 Flash via GEMINI_API_KEY in config.js
-// Units: reads UNITS_BISNIS from config.js — no hardcoded list here
+// Depends on: constants.js, utils.js, app.js, components.js
 // ═══════════════════════════════════════════════════
 
 const ChatApp = (() => {
@@ -15,10 +12,6 @@ const ChatApp = (() => {
   // ─────────────────────────────────────────
   const MAX_HISTORY  = 50;
   const TYPING_DELAY = 500;
-
-  // Gemini endpoint — key injected from config.js
-  const GEMINI_URL = () =>
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
   // ─────────────────────────────────────────
   // STATE
@@ -79,27 +72,17 @@ const ChatApp = (() => {
     }
   }
 
-  // ─────────────────────────────────────────
-  // CLEAR HISTORY
-  // Uses inline confirm dialog — no dependency on showConfirm()
-  // ─────────────────────────────────────────
   function _clearHistory() {
-    const overlay = document.getElementById('chat-clear-overlay');
-    if (overlay) overlay.classList.add('active');
-  }
-
-  function _clearHistoryConfirmed() {
-    _messages = [];
-    _pendingConfirm = null;
-    localStorage.removeItem(STORAGE_KEY.CHAT_HISTORY);
-    _closeClearOverlay();
-    _render();
-    showToast('Riwayat chat dihapus', 'success');
-  }
-
-  function _closeClearOverlay() {
-    const overlay = document.getElementById('chat-clear-overlay');
-    if (overlay) overlay.classList.remove('active');
+    showConfirm(
+      'Hapus Riwayat Chat',
+      'Semua pesan akan dihapus. Lanjutkan?',
+      () => {
+        _messages = [];
+        _pendingConfirm = null;
+        localStorage.removeItem(STORAGE_KEY.CHAT_HISTORY);
+        _render();
+      }
+    );
   }
 
   // ─────────────────────────────────────────
@@ -135,8 +118,10 @@ const ChatApp = (() => {
   function _showTyping() {
     const container = document.getElementById('chat-messages');
     if (!container) return;
+    // Remove existing typing indicator if any
     const existing = document.getElementById('chat-typing');
     if (existing) existing.remove();
+
     const el = document.createElement('div');
     el.className = 'chat-typing';
     el.id = 'chat-typing';
@@ -216,10 +201,10 @@ const ChatApp = (() => {
   }
 
   // ─────────────────────────────────────────
-  // AI CALL — Google Gemini 2.0 Flash
+  // AI CALL
   // ─────────────────────────────────────────
   async function _callAI(userText) {
-    // Build conversation history — last 20 messages
+    // Build Gemini contents array — last 20 messages
     // Gemini uses 'user' and 'model' roles (not 'assistant')
     const historySlice = _messages.slice(-20);
     const contents = historySlice.map(m => ({
@@ -240,7 +225,7 @@ const ChatApp = (() => {
       }
     } catch (e) { /* no cache — skip */ }
 
-    // UNITS_BISNIS read from config.js — single source of truth
+    // UNITS_BISNIS from config.js — single source of truth
     const unitsList = (typeof UNITS_BISNIS !== 'undefined' ? UNITS_BISNIS : [
       'IT & Elektronik', 'Medis & Kesehatan', 'Logistik', 'Energi', 'Konstruksi', 'Umum'
     ]).join(', ');
@@ -274,20 +259,26 @@ Jika permintaan di luar dua topik ini, balas:
 
 PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesudah JSON.`;
 
-    const response = await fetch(GEMINI_URL(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemInstruction }]
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY
         },
-        contents: contents,
-        generationConfig: {
-          maxOutputTokens: 1000,
-          temperature:     0.3   // low temp = more predictable JSON output
-        }
-      })
-    });
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: systemInstruction }]
+          },
+          contents: contents,
+          generationConfig: {
+            maxOutputTokens: 1000,
+            temperature:     0.3
+          }
+        })
+      }
+    );
 
     const data = await response.json();
 
@@ -296,13 +287,12 @@ PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesud
       throw new Error(errMsg);
     }
 
-    // Gemini response shape: candidates[0].content.parts[0].text
+    // Gemini response: candidates[0].content.parts[0].text
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error('Empty response from Gemini');
 
     return text.trim();
   }
-
   // ─────────────────────────────────────────
   // HANDLE AI RESPONSE
   // ─────────────────────────────────────────
@@ -399,15 +389,8 @@ PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesud
       window.location.href = 'index.html';
     });
 
-    // Clear history — opens inline confirm overlay
+    // Clear history
     document.getElementById('chat-clear-btn')?.addEventListener('click', _clearHistory);
-
-    // Clear confirm overlay buttons
-    document.getElementById('chat-clear-confirm-ok')?.addEventListener('click', _clearHistoryConfirmed);
-    document.getElementById('chat-clear-confirm-cancel')?.addEventListener('click', _closeClearOverlay);
-    document.getElementById('chat-clear-overlay')?.addEventListener('click', (e) => {
-      if (e.target === document.getElementById('chat-clear-overlay')) _closeClearOverlay();
-    });
 
     // Textarea — auto-grow + send state
     const ta = document.getElementById('chat-textarea');
@@ -431,7 +414,7 @@ PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesud
       if (ta) sendMessage(ta.value);
     });
 
-    // Confirm card buttons — event delegation
+    // Confirm card buttons — event delegation on messages container
     document.getElementById('chat-messages')?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-confirm-id]');
       if (!btn) return;
@@ -439,6 +422,17 @@ PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesud
       const action = btn.dataset.action;
       if (action === 'save')   _confirmSave(msgId);
       if (action === 'cancel') _confirmCancel(msgId);
+    });
+
+    // Confirm dialog (base.css showConfirm uses these)
+    document.getElementById('confirm-cancel')?.addEventListener('click', closeConfirm);
+    document.getElementById('confirm-ok')?.addEventListener('click', () => {
+      const fn = window._confirmOkFn;
+      if (fn) { fn(); window._confirmOkFn = null; }
+      closeConfirm();
+    });
+    document.getElementById('confirm-overlay')?.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('confirm-overlay')) closeConfirm();
     });
   }
 
