@@ -295,39 +295,16 @@ Jika permintaan di luar dua topik ini, balas:
 
 PENTING: Saat membalas JSON, HANYA tulis JSON. Tidak ada kata sebelum atau sesudah JSON.`;
 
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: systemInstruction }]
-          },
-          contents: contents,
-          generationConfig: {
-            maxOutputTokens: 1000,
-            temperature:     0.3
-          }
-        })
-      }
-    );
+    // Route through Apps Script — key lives in Script Properties server-side
+    const result = await api('geminiChat', {
+      system_instruction: { parts: [{ text: systemInstruction }] },
+      contents: contents
+    });
 
-    const data = await response.json();
+    if (!result.ok) throw new Error(result.error || 'Gemini proxy error');
+    if (!result.text) throw new Error('Empty response from Gemini');
 
-    if (!response.ok) {
-      const errMsg = data.error?.message || ('API error ' + response.status);
-      throw new Error(errMsg);
-    }
-
-    // Gemini response: candidates[0].content.parts[0].text
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error('Empty response from Gemini');
-
-    return text.trim();
+    return result.text.trim();
   }
   // ─────────────────────────────────────────
   // HANDLE AI RESPONSE

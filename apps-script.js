@@ -53,6 +53,9 @@ function doPost(e) {
       case 'updateProject':   result = updateProject(body); break;
       case 'deleteProject':   result = deleteProject(body.id); break;
 
+      // ── Arkana AI ──
+      case 'geminiChat':    result = geminiChat(body); break;
+
       default: result = { ok: false, error: 'Unknown action: ' + action };
     }
 
@@ -440,6 +443,53 @@ function deleteProject(id) {
   // Warn: does not delete linked expenses — handled on frontend with confirm dialog
   deleteRow(ss.getSheetByName(TABS.projects), id);
   return { ok: true };
+}
+
+
+// ─────────────────────────────────────────
+// ARKANA AI — Gemini Proxy
+// Calls Gemini API server-side so the key
+// never lives in any client-side file.
+//
+// Setup (one-time):
+//   Apps Script → Project Settings → Script Properties
+//   Add property: GEMINI_API_KEY = AQ.Ab...your-key...
+// ─────────────────────────────────────────
+function geminiChat(body) {
+  // Read key from Script Properties — never hardcoded
+  const key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!key) return { ok: false, error: 'GEMINI_API_KEY not set in Script Properties' };
+
+  const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+
+  const payload = {
+    system_instruction: body.system_instruction,
+    contents:           body.contents,
+    generationConfig: {
+      maxOutputTokens: 1000,
+      temperature:     0.3
+    }
+  };
+
+  const options = {
+    method:      'post',
+    contentType: 'application/json',
+    headers:     { 'x-goog-api-key': key },
+    payload:     JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  const response = UrlFetchApp.fetch(endpoint, options);
+  const data     = JSON.parse(response.getContentText());
+
+  if (response.getResponseCode() !== 200) {
+    return { ok: false, error: data.error?.message || 'Gemini API error ' + response.getResponseCode() };
+  }
+
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) return { ok: false, error: 'Empty response from Gemini' };
+
+  return { ok: true, text };
 }
 
 // ─────────────────────────────────────────
