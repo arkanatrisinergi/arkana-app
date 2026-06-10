@@ -383,7 +383,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-lg);
+  font-size: var(--text-md);          /* fix #2: one level smaller than --text-lg */
   font-weight: var(--weight-semibold);
   font-family: var(--font-body);
   border-radius: var(--radius-full);
@@ -406,51 +406,45 @@
   color: var(--color-success);
 }
 
-/* ── Reimburse item card ── */
+/* ── Reimburse item card — matches .expense-card spacing exactly ── */
+/* fix #4: padding, gap, divider margin all aligned with expense-card */
 .reimburse-item-card {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-2);
+  padding: var(--space-3) var(--space-4);  /* matches .expense-card */
+  margin-bottom: var(--space-2);           /* matches .card-list gap */
+  cursor: default;
+  transition: border-color var(--duration-fast) var(--ease-standard);
 }
 
 .reimburse-item-card.is-paid {
   opacity: .6;
 }
 
-.reimburse-item-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-1);
-}
-
 .reimburse-item-desc {
-  font-size: var(--text-lg);
+  font-size: var(--text-lg);           /* matches .card-desc */
   font-weight: var(--weight-medium);
   color: var(--color-text-2);
-  flex: 1;
-  min-width: 0;
+  margin-bottom: var(--space-1);       /* matches .card-desc margin */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .reimburse-item-amount {
-  font-size: var(--text-3xl);
+  font-size: var(--text-3xl);          /* matches .card-amount */
   font-weight: var(--weight-extrabold);
   color: var(--color-text);
   font-family: var(--font-mono);
   letter-spacing: -.02em;
-  margin-bottom: var(--space-3);
+  /* no extra margin — divider below handles spacing */
 }
 
 .reimburse-item-divider {
   height: 1px;
   background: var(--color-border);
-  margin-block: var(--space-3);
+  margin-block: var(--space-3);        /* matches .card-divider */
 }
 
 .reimburse-item-footer {
@@ -462,20 +456,21 @@
 }
 
 .reimburse-item-meta {
-  font-size: var(--text-xs);
+  font-size: var(--text-xs);           /* matches .card-date */
   color: var(--color-muted);
   font-family: var(--font-mono);
+  flex-shrink: 0;
 }
 
 /* "Bayar" action button on outstanding card */
 .btn-bayar {
   height: 30px;
   padding: 0 var(--space-3);
-  background: rgba(245, 158, 11, .1);
-  border: 1px solid rgba(245, 158, 11, .35);
-  color: var(--color-warning);
+  background: var(--color-surface-2);          /* fix #5: neutral, not amber */
+  border: 1.5px solid var(--color-border-2);   /* fix #5: neutral border */
+  color: var(--color-text-2);                  /* fix #5: neutral text */
   border-radius: var(--radius-full);
-  font-size: var(--text-base);
+  font-size: var(--text-md);                   /* fix #5: one step bigger than before */
   font-weight: var(--weight-bold);
   font-family: var(--font-body);
   cursor: pointer;
@@ -500,13 +495,13 @@
   font-family: var(--font-mono);
 }
 
-/* ── Grand total bar ── */
+/* ── Grand total bar — fix #3: neutral, not amber ── */
 .reimburse-total-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(245, 158, 11, .08);
-  border: 1px solid rgba(245, 158, 11, .2);
+  background: var(--color-surface);            /* fix #3: neutral surface */
+  border: 1px solid var(--color-border);       /* fix #3: neutral border */
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
@@ -517,13 +512,13 @@
   font-weight: var(--weight-bold);
   text-transform: uppercase;
   letter-spacing: .1em;
-  color: var(--color-warning);
+  color: var(--color-text-3);                  /* fix #3: neutral muted */
 }
 
 .reimburse-total-value {
   font-size: var(--text-2xl);
   font-weight: var(--weight-extrabold);
-  color: var(--color-warning);
+  color: var(--color-text);                    /* fix #3: neutral primary text */
   font-family: var(--font-mono);
   letter-spacing: -.02em;
 }
@@ -536,7 +531,7 @@
 }
 
 .bayar-expense-amount {
-  font-size: 28px;
+  font-size: var(--text-5xl);                  /* fix #1: use token instead of hardcoded 28px */
   font-weight: var(--weight-extrabold);
   color: var(--color-text);
   font-family: var(--font-mono);
