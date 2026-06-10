@@ -46,7 +46,8 @@ function doPost(e) {
       case 'addExpense':      result = addExpense(body); break;
       case 'updateExpense':   result = updateExpense(body); break;
       case 'deleteExpense':   result = deleteExpense(body.id); break;
-      case 'markVendorLunas': result = markVendorLunas(body); break;
+      case 'markVendorLunas':    result = markVendorLunas(body); break;
+      case 'markReimbursePaid':  result = markReimbursePaid(body); break;
       // ── Projects ──
       case 'getProjects':     result = getProjects(); break;
       case 'addProject':      result = addProject(body); break;
@@ -332,20 +333,24 @@ function addExpense(data) {
 
   sheet.appendRow([
     data.id,
-    data.tanggal       || '',
-    data.deskripsi     || '',
-    data.jumlah        || 0,
-    data.kategori      || '',
-    data.customKategori|| '',
-    data.tipe          || 'umum',
-    data.projectId     || '',
+    data.tanggal          || '',
+    data.deskripsi        || '',
+    data.jumlah           || 0,
+    data.kategori         || '',
+    data.customKategori   || '',
+    data.tipe             || 'umum',
+    data.projectId        || '',
     data.metodePembayaran || '',
-    data.perluReimburse|| '',
-    data.dibayarOleh   || '',
-    data.vendor        || '',
-    data.vendorPayStatus || '',
-    data.createdBy     || '',
-    data.createdAt     || ''
+    data.perluReimburse   || '',
+    data.dibayarOleh      || '',
+    data.vendor           || '',
+    data.vendorPayStatus  || '',
+    data.createdBy        || '',
+    data.createdAt        || '',
+    // PRD-02.2 — Reimburse management cols
+    data.reimburseStatus  || '',
+    data.reimbursePaidAt  || '',
+    data.reimbursePaidBy  || ''
   ]);
 
   return { ok: true };
@@ -357,22 +362,26 @@ function updateExpense(data) {
   const rowIdx = findRow(sheet, data.id);
   if (rowIdx < 0) return { ok: false, error: 'Pengeluaran tidak ditemukan' };
 
-  sheet.getRange(rowIdx, 1, 1, 15).setValues([[
+  sheet.getRange(rowIdx, 1, 1, 18).setValues([[
     data.id,
-    data.tanggal        || '',
-    data.deskripsi      || '',
-    data.jumlah         || 0,
-    data.kategori       || '',
-    data.customKategori || '',
-    data.tipe           || 'umum',
-    data.projectId      || '',
+    data.tanggal          || '',
+    data.deskripsi        || '',
+    data.jumlah           || 0,
+    data.kategori         || '',
+    data.customKategori   || '',
+    data.tipe             || 'umum',
+    data.projectId        || '',
     data.metodePembayaran || '',
-    data.perluReimburse || '',
-    data.dibayarOleh    || '',
-    data.vendor         || '',
-    data.vendorPayStatus|| '',
-    data.createdBy      || '',
-    data.createdAt      || ''
+    data.perluReimburse   || '',
+    data.dibayarOleh      || '',
+    data.vendor           || '',
+    data.vendorPayStatus  || '',
+    data.createdBy        || '',
+    data.createdAt        || '',
+    // PRD-02.2 — Reimburse management cols
+    data.reimburseStatus  || '',
+    data.reimbursePaidAt  || '',
+    data.reimbursePaidBy  || ''
   ]]);
 
   return { ok: true };
@@ -391,6 +400,18 @@ function markVendorLunas(data) {
   const rowIdx = findRow(sheet, data.id);
   if (rowIdx < 0) return { ok: false, error: 'Pengeluaran tidak ditemukan' };
   sheet.getRange(rowIdx, 13).setValue('lunas');
+  return { ok: true };
+}
+
+// Mark reimburse as paid — surgical update cols 16–18 only (PRD-02.2)
+function markReimbursePaid(data) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(TABS.expenses);
+  const rowIdx = findRow(sheet, data.id);
+  if (rowIdx < 0) return { ok: false, error: 'Pengeluaran tidak ditemukan' };
+  sheet.getRange(rowIdx, 16).setValue('paid');
+  sheet.getRange(rowIdx, 17).setValue(data.reimbursePaidAt || '');
+  sheet.getRange(rowIdx, 18).setValue(data.reimbursePaidBy || '');
   return { ok: true };
 }
 
@@ -502,7 +523,7 @@ function ensureSheets(ss) {
     [TABS.prices]:    ['id','productId','supplierId','harga','moq','catatan','updatedBy','updatedAt'],
     [TABS.log]:       ['timestamp','action','detail','user'],
     [TABS.settings]:  ['key','value'],
-    [TABS.expenses]:  ['id','tanggal','deskripsi','jumlah','kategori','customKategori','tipe','projectId','metodePembayaran','perluReimburse','dibayarOleh','vendor','vendorPayStatus','createdBy','createdAt'],
+    [TABS.expenses]:  ['id','tanggal','deskripsi','jumlah','kategori','customKategori','tipe','projectId','metodePembayaran','perluReimburse','dibayarOleh','vendor','vendorPayStatus','createdBy','createdAt','reimburseStatus','reimbursePaidAt','reimbursePaidBy'],
     [TABS.projects]:  ['id','nama','unitBisnis','status','createdBy','createdAt']
   };
 

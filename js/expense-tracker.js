@@ -24,6 +24,10 @@ const ExpenseApp = (() => {
   let _lastScrollY   = 0;
   let _filterVisible = true;
 
+  // Reimburse sub-tab state (PRD-02.2)
+  let _reimburseSubTab = REIMBURSE_TAB.OUTSTANDING;
+  let _bayarId         = null;
+
   const CACHE_KEY_EXPENSES = 'expenses';
   const CACHE_KEY_PROJECTS = 'projects';
 
@@ -43,6 +47,7 @@ const ExpenseApp = (() => {
     // Sheet drag-to-close
     initSheetDrag('overlay-expense', 'overlay-expense > .sheet');
     initSheetDrag('overlay-detail',  'overlay-detail > .sheet');
+    initSheetDrag('overlay-bayar',   'overlay-bayar > .sheet');
 
     // Scroll-driven filter collapse
     _initFilterCollapse();
@@ -451,6 +456,171 @@ const ExpenseApp = (() => {
   }
 
   // ─────────────────────────────────────────
+  // RENDER — REIMBURSE TAB (PRD-02.2)
+  // ─────────────────────────────────────────
+  function _switchReimburseSubTab(subTab) {
+    _reimburseSubTab = subTab;
+    document.getElementById('sub-tab-outstanding')
+      .classList.toggle('active', subTab === REIMBURSE_TAB.OUTSTANDING);
+    document.getElementById('sub-tab-lunas')
+      .classList.toggle('active', subTab === REIMBURSE_TAB.LUNAS);
+    _renderReimburse();
+  }
+
+  function _reimburseItems() {
+    return _expenses.filter(e => e.perluReimburse === REIMBURSE.YA);
+  }
+
+  function _isOutstanding(e) {
+    return !e.reimburseStatus || e.reimburseStatus === REIMBURSE_STATUS.OUTSTANDING;
+  }
+
+  function _renderReimburse() {
+    const container = document.getElementById('reimburse-content');
+    const all       = _reimburseItems();
+
+    if (_reimburseSubTab === REIMBURSE_TAB.OUTSTANDING) {
+      const items = all.filter(_isOutstanding)
+        .sort((a, b) => new Date(a.tanggal || 0) - new Date(b.tanggal || 0)); // oldest first
+
+      if (!items.length) {
+        container.innerHTML = UI.emptyState('✅', 'Semua reimburse sudah lunas.');
+        return;
+      }
+
+      const total = items.reduce((s, e) => s + (parseFloat(e.jumlah) || 0), 0);
+
+      let html = `
+        <div class="reimburse-total-bar">
+          <span class="reimburse-total-label">Outstanding</span>
+          <span class="reimburse-total-value">${_fmtRp(total)}</span>
+        </div>`;
+
+      html += items.map(e => {
+        const proj = e.tipe === EXPENSE_TYPE.PROYEK
+          ? _projects.find(p => p.id === e.projectId) : null;
+        const projTag = proj
+          ? `<span class="badge badge-proyek">📁 ${_esc(proj.nama)}</span>` : '';
+        return `
+          <div class="reimburse-item-card" data-id="${e.id}">
+            <div class="reimburse-item-desc">${_esc(e.deskripsi || '(tanpa deskripsi)')}</div>
+            <div class="reimburse-item-amount">${_fmtRp(e.jumlah)}</div>
+            <div class="reimburse-item-divider"></div>
+            <div class="reimburse-item-footer">
+              <div>
+                <div class="reimburse-item-meta">${_fmtDate(e.tanggal)}</div>
+                <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;">
+                  <span class="badge badge-personal">👤 ${_esc(e.dibayarOleh || 'Personal')}</span>
+                  ${projTag}
+                </div>
+              </div>
+              <button class="btn-bayar" data-id="${e.id}">Bayar</button>
+            </div>
+          </div>`;
+      }).join('');
+
+      container.innerHTML = html;
+
+      container.querySelectorAll('.btn-bayar').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          _openBayarSheet(btn.dataset.id);
+        });
+      });
+
+    } else {
+      // LUNAS sub-tab
+      const items = all.filter(e => e.reimburseStatus === REIMBURSE_STATUS.PAID)
+        .sort((a, b) => new Date(b.reimbursePaidAt || 0) - new Date(a.reimbursePaidAt || 0));
+
+      if (!items.length) {
+        container.innerHTML = UI.emptyState('📋', 'Belum ada reimburse yang lunas.');
+        return;
+      }
+
+      container.innerHTML = items.map(e => `
+        <div class="reimburse-item-card is-paid" data-id="${e.id}">
+          <div class="reimburse-item-desc">${_esc(e.deskripsi || '(tanpa deskripsi)')}</div>
+          <div class="reimburse-item-amount">${_fmtRp(e.jumlah)}</div>
+          <div class="reimburse-item-divider"></div>
+          <div class="reimburse-item-footer">
+            <div>
+              <div class="reimburse-item-meta">${_fmtDate(e.tanggal)}</div>
+              <div class="reimburse-paid-meta" style="margin-top:3px;">
+                Dibayar ${_fmtDate(e.reimbursePaidAt)} · oleh ${_esc(e.reimbursePaidBy || '—')}
+              </div>
+            </div>
+            <span class="badge badge-lunas">Lunas ✓</span>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // BAYAR SHEET (PRD-02.2)
+  // ─────────────────────────────────────────
+  function _openBayarSheet(id) {
+    const e = _expenses.find(x => x.id === id);
+    if (!e) return;
+    _bayarId = id;
+
+    document.getElementById('bayar-expense-name').textContent =
+      e.deskripsi || '(tanpa deskripsi)';
+    document.getElementById('bayar-expense-amount').textContent = _fmtRp(e.jumlah);
+
+    // Autofill today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('f-bayar-tanggal').value = today;
+
+    // Dibayar oleh — from session (logged-in user name)
+    const user = getUser();
+    document.getElementById('f-bayar-oleh').textContent = user ? (user.name || user.id) : '—';
+
+    _showOverlay('overlay-bayar');
+  }
+
+  async function _confirmBayar() {
+    const e = _expenses.find(x => x.id === _bayarId);
+    if (!e) return;
+
+    const paidAt  = document.getElementById('f-bayar-tanggal').value;
+    const paidBy  = document.getElementById('f-bayar-oleh').textContent;
+
+    if (!paidAt) { showToast('Tanggal wajib diisi', 'error'); return; }
+
+    _hideOverlay('overlay-bayar');
+    await new Promise(r => setTimeout(r, 200));
+    showLoading('Menyimpan...');
+
+    try {
+      await api('markReimbursePaid', {
+        id:              _bayarId,
+        reimbursePaidAt: paidAt,
+        reimbursePaidBy: paidBy
+      });
+
+      // Update local state
+      const idx = _expenses.findIndex(x => x.id === _bayarId);
+      _expenses[idx] = {
+        ..._expenses[idx],
+        reimburseStatus:  REIMBURSE_STATUS.PAID,
+        reimbursePaidAt:  paidAt,
+        reimbursePaidBy:  paidBy
+      };
+      saveToCache({ expenses: _expenses }, CACHE_KEY_EXPENSES);
+
+      logActivity('reimburse_paid', `Reimburse dibayar: ${e.deskripsi} — ${_fmtRp(e.jumlah)}`);
+      showToast('Reimburse ditandai lunas ✓', 'success');
+      _renderReimburse();
+
+    } catch (err) {
+      showToast('Gagal: ' + err.message, 'error');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // ─────────────────────────────────────────
   // DETAIL SHEET
   // ─────────────────────────────────────────
   function _openDetail(id) {
@@ -778,12 +948,21 @@ const ExpenseApp = (() => {
       tab === EXPENSE_TAB.PENGELUARAN ? '' : 'none';
     document.getElementById('pane-ringkasan').style.display =
       tab === EXPENSE_TAB.RINGKASAN ? '' : 'none';
+    document.getElementById('pane-reimburse').style.display =
+      tab === EXPENSE_TAB.REIMBURSE ? '' : 'none';
 
     // FAB only on pengeluaran tab
     document.getElementById('btn-fab').style.display =
       tab === EXPENSE_TAB.PENGELUARAN ? '' : 'none';
 
-    if (tab === EXPENSE_TAB.RINGKASAN) _renderRingkasan();
+    // Filters only on pengeluaran tab
+    const filtersWrap = document.querySelector('.filters-wrap');
+    if (filtersWrap) {
+      filtersWrap.style.display = tab === EXPENSE_TAB.PENGELUARAN ? '' : 'none';
+    }
+
+    if (tab === EXPENSE_TAB.RINGKASAN)  _renderRingkasan();
+    if (tab === EXPENSE_TAB.REIMBURSE)  _renderReimburse();
   }
 
   // ─────────────────────────────────────────
@@ -810,6 +989,22 @@ const ExpenseApp = (() => {
       .addEventListener('click', () => _switchTab(EXPENSE_TAB.PENGELUARAN));
     document.getElementById('tab-ringkasan')
       .addEventListener('click', () => _switchTab(EXPENSE_TAB.RINGKASAN));
+    document.getElementById('tab-reimburse')
+      .addEventListener('click', () => _switchTab(EXPENSE_TAB.REIMBURSE));
+
+    // Reimburse sub-tabs
+    document.getElementById('sub-tab-outstanding')
+      .addEventListener('click', () => _switchReimburseSubTab(REIMBURSE_TAB.OUTSTANDING));
+    document.getElementById('sub-tab-lunas')
+      .addEventListener('click', () => _switchReimburseSubTab(REIMBURSE_TAB.LUNAS));
+
+    // Bayar sheet
+    document.getElementById('btn-bayar-cancel')
+      .addEventListener('click', () => _hideOverlay('overlay-bayar'));
+    document.getElementById('btn-bayar-confirm')
+      .addEventListener('click', _confirmBayar);
+    document.getElementById('overlay-bayar')
+      .addEventListener('click', e => { if (e.target === e.currentTarget) _hideOverlay('overlay-bayar'); });
 
     // FAB
     document.getElementById('btn-fab')

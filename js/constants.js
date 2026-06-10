@@ -99,7 +99,20 @@ const PROJECT_STATUS = Object.freeze({
 // Expense tab identifiers
 const EXPENSE_TAB = Object.freeze({
   PENGELUARAN: 'pengeluaran',
-  RINGKASAN:   'ringkasan'
+  RINGKASAN:   'ringkasan',
+  REIMBURSE:   'reimburse'
+});
+
+// Reimburse status — PRD-02.2
+const REIMBURSE_STATUS = Object.freeze({
+  OUTSTANDING: 'outstanding',
+  PAID:        'paid'
+});
+
+// Reimburse sub-tab — PRD-02.2
+const REIMBURSE_TAB = Object.freeze({
+  OUTSTANDING: 'outstanding',
+  LUNAS:       'lunas'
 });
 
 // Expense categories — grouped, hardcoded

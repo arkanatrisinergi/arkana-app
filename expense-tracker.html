@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="css/expense-tracker.css">
 
   <!-- JS load order: config → constants → utils → app → page -->
-  <script src="config.js?v=2.1.0"></script>
+  <script src="config.js?v=2.3.0"></script>
   <script src="js/constants.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/app.js"></script>
@@ -36,6 +36,7 @@
       <div class="tab-bar">
         <div class="tab active" id="tab-pengeluaran">Pengeluaran</div>
         <div class="tab"        id="tab-ringkasan">Ringkasan</div>
+        <div class="tab"        id="tab-reimburse">Reimburse</div>
       </div>
       <!-- Filter bars — inside frost bar so they scroll with glass -->
       <div class="filters-wrap">
@@ -67,6 +68,15 @@
       <!-- ── PANE: RINGKASAN ── -->
       <div id="pane-ringkasan" class="scroll-pane" style="display:none">
         <div id="ringkasan-content"></div>
+      </div>
+
+      <!-- ── PANE: REIMBURSE ── -->
+      <div id="pane-reimburse" class="scroll-pane" style="display:none">
+        <div class="sub-tabs">
+          <button class="sub-tab active" id="sub-tab-outstanding">Outstanding</button>
+          <button class="sub-tab lunas"  id="sub-tab-lunas">Lunas</button>
+        </div>
+        <div id="reimburse-content"></div>
       </div>
 
     </div><!-- /.scroll-area -->
@@ -190,6 +200,37 @@
     <div class="btn-row" style="margin-top:20px;">
       <button class="btn btn-secondary" id="btn-detail-edit">✏️ Edit</button>
       <button class="btn btn-danger"    id="btn-detail-delete">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     OVERLAY: BAYAR REIMBURSE (PRD-02.2)
+══════════════════════════════════════ -->
+<div class="overlay" id="overlay-bayar">
+  <div class="sheet" id="sheet-bayar">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Konfirmasi Pembayaran</div>
+    <div class="sheet-sub">Reimburse akan ditandai lunas</div>
+
+    <div class="bayar-expense-name" id="bayar-expense-name"></div>
+    <div class="bayar-expense-amount" id="bayar-expense-amount"></div>
+
+    <!-- Tanggal Dibayar -->
+    <div class="form-group">
+      <label class="form-label">Tanggal Dibayar</label>
+      <input class="form-input" id="f-bayar-tanggal" type="date">
+    </div>
+
+    <!-- Dibayar Oleh — read-only, auto-filled from session -->
+    <div class="form-group">
+      <label class="form-label">Dibayar Oleh</label>
+      <div class="form-input-readonly" id="f-bayar-oleh"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btn-bayar-cancel">Batal</button>
+      <button class="btn btn-primary"   id="btn-bayar-confirm">Konfirmasi</button>
     </div>
   </div>
 </div>

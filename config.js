@@ -11,8 +11,8 @@
 // All other files read from here — never redefine.
 // ─────────────────────────────────────────
 
-const ARKANA_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLE_wuJ-ie-vEYg2dHceNJlmQC0U6eF-CxUSHXMyWPVMYhh8Mg4-9uqFCXNmcRPLQ_Qw/exec';
-const APP_VERSION       = '2.1.0';
+const ARKANA_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyx2DJGVH2lAOSaOitpbAVZnx194qH3iLkQPQPY0UoxI5sM2kzZ3da-aQtfkSFFzmsI/exec';
+const APP_VERSION       = '2.3.0';
 
 
 // Unit bisnis — single source of truth.
