@@ -370,50 +370,42 @@
    PRD-02.2 — REIMBURSE TAB
 ══════════════════════════════════════ */
 
-/* ── Sub-tabs — underline style, compact ── */
+/* ── Sub-tabs — full-width pill, filter chip size ── */
 .sub-tabs {
   display: flex;
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-2);
   margin-bottom: var(--space-4);
-  gap: 0;
 }
 
 .sub-tab {
   flex: 1;
-  height: 32px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   font-family: var(--font-body);
+  border-radius: var(--radius-full);
   cursor: pointer;
-  border: none;
+  border: 1px solid var(--color-border-2);
   background: transparent;
   color: var(--color-text-3);
-  position: relative;
-  transition: color var(--duration-fast) var(--ease-standard);
+  transition: all var(--duration-fast) var(--ease-standard);
 }
 
-.sub-tab::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 20%;
-  right: 20%;
-  height: 2px;
-  background: var(--color-accent);
-  border-radius: 2px 2px 0 0;
-  opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-standard);
-}
-
+/* Outstanding active — amber (perlu perhatian) */
 .sub-tab.active {
-  color: var(--color-accent);
+  background: rgba(245, 158, 11, .12);
+  border-color: rgba(245, 158, 11, .4);
+  color: var(--color-warning);
 }
 
-.sub-tab.active::after {
-  opacity: 1;
+/* Lunas active — green (selesai) */
+.sub-tab.lunas.active {
+  background: rgba(16, 185, 129, .1);
+  border-color: rgba(16, 185, 129, .3);
+  color: var(--color-success);
 }
 
 /* ── Reimburse item card — matches .expense-card spacing exactly ── */
