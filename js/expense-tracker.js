@@ -351,42 +351,6 @@ const ExpenseApp = (() => {
       });
     }
 
-    // ── Reimbursement Outstanding ──
-    const reimburseItems = _expenses.filter(e =>
-      e.metodePembayaran === METODE_BAYAR.PERSONAL &&
-      e.perluReimburse === REIMBURSE.YA &&
-      e.dibayarOleh
-    );
-    if (reimburseItems.length) {
-      const grouped = _groupBy(reimburseItems, e => e.dibayarOleh);
-      const grandTotal = reimburseItems.reduce((s, e) => s + (parseFloat(e.jumlah) || 0), 0);
-      html += `<div class="summary-section">
-        <div class="summary-section-title">⚠️ Reimburse Outstanding</div>
-        <div class="reimburse-grand-total">
-          <span>Total perlu direimburse</span>
-          <span>${_fmtRp(grandTotal)}</span>
-        </div>`;
-      Object.entries(grouped).forEach(([nama, items]) => {
-        const subtotal = items.reduce((s, e) => s + (parseFloat(e.jumlah) || 0), 0);
-        html += `
-          <div class="reimburse-card">
-            <div class="summary-row">
-              <span class="summary-row-label">👤 ${_esc(nama)}</span>
-              <span class="summary-row-value">${_fmtRp(subtotal)}</span>
-            </div>
-            ${items.map(e => `
-              <div class="summary-row" style="padding-left:28px;">
-                <div>
-                  <div class="summary-row-label" style="font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text2)">${_esc(e.deskripsi || '—')}</div>
-                  <div class="summary-row-sub">${_fmtDate(e.tanggal)}</div>
-                </div>
-                <span class="summary-row-value" style="font-size:12px;">${_fmtRp(e.jumlah)}</span>
-              </div>`).join('')}
-          </div>`;
-      });
-      html += `</div>`;
-    }
-
     // ── Vendor Paylater Outstanding ──
     const paylaterItems = _expenses.filter(e =>
       e.metodePembayaran === METODE_BAYAR.VENDOR_PAYLATER &&
@@ -500,7 +464,7 @@ const ExpenseApp = (() => {
         const proj = e.tipe === EXPENSE_TYPE.PROYEK
           ? _projects.find(p => p.id === e.projectId) : null;
         const projTag = proj
-          ? `<span class="badge badge-proyek">📁 ${_esc(proj.nama)}</span>` : '';
+          ? `<span class="badge badge-kategori">📁 ${_esc(proj.nama)}</span>` : '';
         return `
           <div class="reimburse-item-card" data-id="${e.id}">
             <div class="reimburse-item-desc">${_esc(e.deskripsi || '(tanpa deskripsi)')}</div>
@@ -510,7 +474,7 @@ const ExpenseApp = (() => {
               <div>
                 <div class="reimburse-item-meta">${_fmtDate(e.tanggal)}</div>
                 <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;">
-                  <span class="badge badge-personal">👤 ${_esc(e.dibayarOleh || 'Personal')}</span>
+                  <span class="badge badge-kategori">👤 ${_esc(e.dibayarOleh || 'Personal')}</span>
                   ${projTag}
                 </div>
               </div>
@@ -547,7 +511,7 @@ const ExpenseApp = (() => {
             <div>
               <div class="reimburse-item-meta">${_fmtDate(e.tanggal)}</div>
               <div class="reimburse-paid-meta" style="margin-top:3px;">
-                Dibayar ${_fmtDate(e.reimbursePaidAt)} · oleh ${_esc(e.reimbursePaidBy || '—')}
+                Dibayar ke ${_esc(e.dibayarOleh || '—')}, ${_fmtDate(e.reimbursePaidAt)} · oleh ${_esc(e.reimbursePaidBy || '—')}
               </div>
             </div>
             <span class="badge badge-lunas">Lunas ✓</span>

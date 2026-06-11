@@ -370,40 +370,50 @@
    PRD-02.2 — REIMBURSE TAB
 ══════════════════════════════════════ */
 
-/* ── Sub-tabs (pill style, inside scroll-pane) ── */
+/* ── Sub-tabs — underline style, compact ── */
 .sub-tabs {
   display: flex;
-  gap: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: var(--space-4);
+  gap: 0;
 }
 
 .sub-tab {
   flex: 1;
-  height: 36px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-md);          /* fix #2: one level smaller than --text-lg */
+  font-size: var(--text-base);
   font-weight: var(--weight-semibold);
   font-family: var(--font-body);
-  border-radius: var(--radius-full);
   cursor: pointer;
-  border: 1.5px solid var(--color-border-2);
+  border: none;
   background: transparent;
   color: var(--color-text-3);
-  transition: all var(--duration-fast) var(--ease-standard);
+  position: relative;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.sub-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--color-accent);
+  border-radius: 2px 2px 0 0;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
 .sub-tab.active {
-  background: rgba(245, 158, 11, .12);
-  border-color: rgba(245, 158, 11, .4);
-  color: var(--color-warning);
+  color: var(--color-accent);
 }
 
-.sub-tab.active.lunas {
-  background: rgba(16, 185, 129, .1);
-  border-color: rgba(16, 185, 129, .3);
-  color: var(--color-success);
+.sub-tab.active::after {
+  opacity: 1;
 }
 
 /* ── Reimburse item card — matches .expense-card spacing exactly ── */
@@ -462,15 +472,15 @@
   flex-shrink: 0;
 }
 
-/* "Bayar" action button on outstanding card */
+/* "Bayar" action button on outstanding card — amber accent */
 .btn-bayar {
   height: 30px;
   padding: 0 var(--space-3);
-  background: var(--color-surface-2);          /* fix #5: neutral, not amber */
-  border: 1.5px solid var(--color-border-2);   /* fix #5: neutral border */
-  color: var(--color-text-2);                  /* fix #5: neutral text */
+  background: rgba(245, 158, 11, .1);
+  border: 1px solid rgba(245, 158, 11, .35);
+  color: var(--color-warning);
   border-radius: var(--radius-full);
-  font-size: var(--text-md);                   /* fix #5: one step bigger than before */
+  font-size: var(--text-md);
   font-weight: var(--weight-bold);
   font-family: var(--font-body);
   cursor: pointer;
