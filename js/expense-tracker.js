@@ -28,6 +28,14 @@ const ExpenseApp = (() => {
   let _reimburseSubTab = REIMBURSE_TAB.OUTSTANDING;
   let _bayarId         = null;
 
+  // Foto struk state (PRD-02.1)
+  // _fotoState: 'idle' | 'url-input' | 'preview'
+  // _fotoUrl: final URL to store (Drive URL or manual URL)
+  // _fotoFile: File object waiting for upload (null if url mode)
+  let _fotoState = 'idle';
+  let _fotoUrl   = '';
+  let _fotoFile  = null;
+
   const CACHE_KEY_EXPENSES = 'expenses';
   const CACHE_KEY_PROJECTS = 'projects';
 
@@ -233,6 +241,20 @@ const ExpenseApp = (() => {
     });
 
     list.innerHTML = sorted.map(e => UI.card.expense(e, _projects)).join('');
+
+    // PRD-02.1 — inject foto icon on cards that have fotoUrl
+    sorted.forEach(e => {
+      if (!e.fotoUrl) return;
+      const card = list.querySelector(`.expense-card[data-id="${e.id}"]`);
+      if (!card) return;
+      const dateEl = card.querySelector('.card-date');
+      if (!dateEl) return;
+      const icon = document.createElement('span');
+      icon.className = 'card-foto-icon';
+      icon.title = 'Ada foto struk';
+      icon.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="1.8"/></svg>`;
+      dateEl.insertAdjacentElement('afterend', icon);
+    });
 
     list.querySelectorAll('.expense-card').forEach(card => {
       card.addEventListener('click', () => _openDetail(card.dataset.id));
@@ -604,6 +626,25 @@ const ExpenseApp = (() => {
     const kategoriLabel = e.kategori === KATEGORI_LAINNYA && e.customKategori
       ? e.customKategori : (e.kategori || '—');
 
+    // Foto preview — inject before detail-rows if fotoUrl exists
+    const sheetEl = document.getElementById('sheet-detail');
+    const existingFoto = sheetEl.querySelector('.detail-foto-section');
+    if (existingFoto) existingFoto.remove();
+
+    if (e.fotoUrl) {
+      const fotoEl = document.createElement('div');
+      fotoEl.className = 'detail-foto-section';
+      fotoEl.innerHTML = `
+        <div class="detail-row-label" style="margin-bottom:var(--space-2);">FOTO STRUK</div>
+        <img class="detail-foto-img" src="${_esc(e.fotoUrl)}" alt="Foto struk"
+             onerror="this.parentElement.style.display='none'">`;
+      fotoEl.querySelector('.detail-foto-img').addEventListener('click', () => {
+        window.open(e.fotoUrl, '_blank');
+      });
+      const detailRowsEl = document.getElementById('detail-rows');
+      sheetEl.insertBefore(fotoEl, detailRowsEl);
+    }
+
     const rows = [
       ['Tanggal',    _fmtDate(e.tanggal)],
       ['Kategori',   kategoriLabel],
@@ -633,6 +674,7 @@ const ExpenseApp = (() => {
     _editingId = null;
     document.getElementById('sheet-expense-title').textContent = 'Pengeluaran Baru';
     _resetForm();
+    document.getElementById('group-foto').style.display = '';
     _showOverlay('overlay-expense');
   }
 
@@ -660,6 +702,10 @@ const ExpenseApp = (() => {
     _onMetodeChange();
     _onKategoriChange();
 
+    // Foto section — hidden on edit (next PRD will handle existing entries)
+    document.getElementById('group-foto').style.display = 'none';
+    _resetFoto();
+
     // Set proyek after DOM update
     setTimeout(() => {
       if (e.tipe === EXPENSE_TYPE.PROYEK) {
@@ -686,6 +732,17 @@ const ExpenseApp = (() => {
     _onTipeChange();
     _onMetodeChange();
     _onKategoriChange();
+    _resetFoto();
+  }
+
+  function _resetFoto() {
+    _fotoState = 'idle';
+    _fotoUrl   = '';
+    _fotoFile  = null;
+    _applyFotoState();
+    document.getElementById('f-foto-url').value = '';
+    document.getElementById('foto-url-error').classList.remove('visible');
+    document.getElementById('foto-preview-img').src = '';
   }
 
   function _populateKategoriSelect() {
@@ -720,6 +777,149 @@ const ExpenseApp = (() => {
     sel.innerHTML = `<option value="">Pilih proyek...</option>` +
       _projects.map(p => `<option value="${p.id}">${_esc(p.nama)}</option>`).join('');
     if (current) sel.value = current;
+  }
+
+  // ─────────────────────────────────────────
+  // FOTO STRUK — STATE MACHINE (PRD-02.1)
+  // States: idle | url-input | preview
+  // ─────────────────────────────────────────
+  function _applyFotoState() {
+    const actionsEl   = document.getElementById('foto-actions');
+    const urlWrapEl   = document.getElementById('foto-url-wrap');
+    const previewWrap = document.getElementById('foto-preview-wrap');
+
+    actionsEl.style.display   = _fotoState === 'idle'      ? '' : 'none';
+    urlWrapEl.classList.toggle('visible', _fotoState === 'url-input');
+    previewWrap.classList.toggle('visible', _fotoState === 'preview');
+  }
+
+  function _onFotoUrlBtn() {
+    _fotoState = 'url-input';
+    _applyFotoState();
+    document.getElementById('f-foto-url').focus();
+  }
+
+  function _onFotoUrlBack() {
+    _fotoState = 'idle';
+    _fotoUrl   = '';
+    _applyFotoState();
+    document.getElementById('f-foto-url').value = '';
+    document.getElementById('foto-url-error').classList.remove('visible');
+  }
+
+  function _onFotoUrlInput() {
+    const val = document.getElementById('f-foto-url').value.trim();
+    const errEl = document.getElementById('foto-url-error');
+    errEl.classList.remove('visible');
+    if (!val) return;
+
+    // Try loading image to validate URL
+    const img = new Image();
+    img.onload = () => {
+      _fotoUrl   = val;
+      _fotoFile  = null;
+      _fotoState = 'preview';
+      document.getElementById('foto-preview-img').src = val;
+      _applyFotoState();
+    };
+    img.onerror = () => {
+      errEl.classList.add('visible');
+    };
+    img.src = val;
+  }
+
+  function _onFotoFileChosen(file) {
+    if (!file) return;
+
+    // Size guard before compress: warn if > 20MB (unusually large)
+    if (file.size > 20 * 1024 * 1024) {
+      showToast('File terlalu besar. Pilih foto lain.', 'error');
+      return;
+    }
+
+    // Show preview immediately from local file
+    const localUrl = URL.createObjectURL(file);
+    document.getElementById('foto-preview-img').src = localUrl;
+    _fotoState = 'preview';
+    _fotoFile  = file;
+    _fotoUrl   = '';   // will be set after upload on save
+    _applyFotoState();
+  }
+
+  // Compress image via canvas — max 1280px, 0.72 quality JPEG
+  // Returns Promise<{ base64: string, mimeType: string, filename: string }>
+  function _compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const MAX = 1280;
+          let w = img.width;
+          let h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else       { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width  = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+          canvas.toBlob((blob) => {
+            if (!blob) { reject(new Error('Canvas toBlob failed')); return; }
+            const fr2 = new FileReader();
+            fr2.onerror = reject;
+            fr2.onload = (e2) => {
+              // Strip the data:image/jpeg;base64, prefix
+              const base64 = e2.target.result.split(',')[1];
+              const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+              if (blob.size > 5 * 1024 * 1024) {
+                reject(new Error(`Foto terlalu besar setelah kompresi (${sizeMB}MB). Coba foto ulang.`));
+                return;
+              }
+              resolve({
+                base64,
+                mimeType: 'image/jpeg',
+                filename: 'struk_' + Date.now() + '.jpg'
+              });
+            };
+            fr2.readAsDataURL(blob);
+          }, 'image/jpeg', 0.72);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Upload file to Drive via Apps Script, return public URL
+  async function _uploadFotoFile(file) {
+    const uploadOverlay = document.getElementById('foto-uploading-overlay');
+    uploadOverlay.classList.add('visible');
+    try {
+      const compressed = await _compressImage(file);
+      const result = await api('uploadFoto', compressed);
+      if (!result.ok) throw new Error(result.error || 'Upload gagal');
+      return result.url;
+    } finally {
+      uploadOverlay.classList.remove('visible');
+    }
+  }
+
+  function _onFotoRemove() {
+    _fotoState = 'idle';
+    _fotoUrl   = '';
+    _fotoFile  = null;
+    document.getElementById('foto-preview-img').src = '';
+    document.getElementById('f-foto-url').value = '';
+    document.getElementById('foto-url-error').classList.remove('visible');
+    // Reset file inputs so same file can be re-selected
+    document.getElementById('input-foto-kamera').value  = '';
+    document.getElementById('input-foto-gallery').value = '';
+    _applyFotoState();
   }
 
   // ─────────────────────────────────────────
@@ -786,6 +986,18 @@ const ExpenseApp = (() => {
     await new Promise(r => setTimeout(r, 200));
     showLoading('Menyimpan...');
 
+    // Upload foto if a file was chosen (url mode already has _fotoUrl set)
+    let resolvedFotoUrl = _fotoUrl;
+    if (_fotoFile) {
+      try {
+        resolvedFotoUrl = await _uploadFotoFile(_fotoFile);
+      } catch (uploadErr) {
+        // Non-blocking — warn but continue saving expense without foto
+        showToast('Foto gagal diupload, expense tetap disimpan.', 'error');
+        resolvedFotoUrl = '';
+      }
+    }
+
     try {
       if (_editingId) {
         const existing = _expenses.find(x => x.id === _editingId);
@@ -817,7 +1029,8 @@ const ExpenseApp = (() => {
           dibayarOleh:      metode === METODE_BAYAR.PERSONAL ? dibayar : '',
           vendorPayStatus,
           createdBy:        user.id,
-          createdAt:        new Date().toISOString()
+          createdAt:        new Date().toISOString(),
+          fotoUrl:          resolvedFotoUrl || ''
         };
         await api('addExpense', newExp);
         _expenses.unshift(newExp);
@@ -991,6 +1204,37 @@ const ExpenseApp = (() => {
     // Rp input formatting
     document.getElementById('f-jumlah')
       .addEventListener('input', _onJumlahInput);
+
+    // ── Foto struk events (PRD-02.1) ──
+    document.getElementById('btn-foto-url')
+      .addEventListener('click', _onFotoUrlBtn);
+    document.getElementById('btn-foto-url-back')
+      .addEventListener('click', _onFotoUrlBack);
+    document.getElementById('f-foto-url')
+      .addEventListener('blur', _onFotoUrlInput);
+    document.getElementById('f-foto-url')
+      .addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); _onFotoUrlInput(); } });
+    document.getElementById('btn-foto-remove')
+      .addEventListener('click', _onFotoRemove);
+
+    // Kamera — triggers file input with capture
+    document.getElementById('btn-foto-kamera').addEventListener('click', () => {
+      const el = document.getElementById('input-foto-kamera');
+      // Check if camera capture is supported; fallback to gallery
+      if (typeof el.capture !== 'undefined') {
+        el.click();
+      } else {
+        document.getElementById('input-foto-gallery').click();
+      }
+    });
+    document.getElementById('input-foto-kamera')
+      .addEventListener('change', e => _onFotoFileChosen(e.target.files[0]));
+
+    // Gallery
+    document.getElementById('btn-foto-gallery')
+      .addEventListener('click', () => document.getElementById('input-foto-gallery').click());
+    document.getElementById('input-foto-gallery')
+      .addEventListener('change', e => _onFotoFileChosen(e.target.files[0]));
 
     // Backdrop close
     document.getElementById('overlay-expense')

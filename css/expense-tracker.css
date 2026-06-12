@@ -367,8 +367,163 @@
 }
 
 /* ══════════════════════════════════════
-   PRD-02.2 — REIMBURSE TAB
+   PRD-02.1 — FOTO STRUK
 ══════════════════════════════════════ */
+
+/* ── Section wrapper ── */
+.foto-section {
+  margin-bottom: var(--space-4);
+}
+
+/* ── 3-button row: URL / Kamera / Gallery ── */
+.foto-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.foto-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-2);
+  border-radius: var(--radius-md);
+  color: var(--color-text-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+
+.foto-btn:active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  opacity: .8;
+}
+
+.foto-btn svg {
+  flex-shrink: 0;
+}
+
+/* ── URL input mode ── */
+.foto-url-wrap {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.foto-url-wrap.visible { display: flex; }
+
+.foto-url-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  color: var(--color-text-3);
+  font-size: var(--text-md);
+  font-family: var(--font-body);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: var(--space-1);
+}
+
+/* ── Preview area ── */
+.foto-preview-wrap {
+  display: none;
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+}
+
+.foto-preview-wrap.visible { display: block; }
+
+.foto-preview-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Remove button — top right corner */
+.foto-remove-btn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: rgba(0,0,0,.55);
+  border: none;
+  color: white;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* Upload progress overlay on preview */
+.foto-uploading-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(9,9,11,.72);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.foto-uploading-overlay.visible {
+  display: flex;
+}
+
+.foto-uploading-text {
+  font-size: var(--text-md);
+  color: var(--color-text-2);
+  font-family: var(--font-body);
+}
+
+/* URL invalid warning */
+.foto-url-error {
+  display: none;
+  font-size: var(--text-md);
+  color: var(--color-danger);
+}
+
+.foto-url-error.visible { display: block; }
+
+/* ── Detail sheet preview ── */
+.detail-foto-section {
+  margin-bottom: var(--space-4);
+}
+
+.detail-foto-img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  display: block;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+}
+
+/* ── Card indicator icon ── */
+.card-foto-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-3);
+  flex-shrink: 0;
+}
 
 /* ── Sub-tabs — full-width pill, filter chip size ── */
 .sub-tabs {
