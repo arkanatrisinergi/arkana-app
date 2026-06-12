@@ -11,7 +11,7 @@
 // All other files read from here — never redefine.
 // ─────────────────────────────────────────
 
-const ARKANA_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbLqdV990CC-suwX0oEaHOGQjYTsVvvw1M0_72XAkKXw0tnzbmrHvg1hIhbN1TBkgbMw/exec';
+const ARKANA_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzctlU8MEFpYs4ujhkScbkrz_kVvHI30rciF8LMbK4RXCDtrL2iPwch9LBzA6U3jBqtsg/exec';
 const APP_VERSION       = '2.4.0';
 
 
