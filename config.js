@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────
 
 const ARKANA_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbLqdV990CC-suwX0oEaHOGQjYTsVvvw1M0_72XAkKXw0tnzbmrHvg1hIhbN1TBkgbMw/exec';
-const APP_VERSION       = '2..0';
+const APP_VERSION       = '2.4.0';
 
 
 // Unit bisnis — single source of truth.
