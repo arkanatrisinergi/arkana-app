@@ -989,13 +989,17 @@ const ExpenseApp = (() => {
     // Upload foto if a file was chosen (url mode already has _fotoUrl set)
     let resolvedFotoUrl = _fotoUrl;
     if (_fotoFile) {
+      showToast('DEBUG: uploading, size=' + _fotoFile.size, '');
       try {
         resolvedFotoUrl = await _uploadFotoFile(_fotoFile);
+        showToast('Upload OK: ' + resolvedFotoUrl.slice(0, 40), 'success');
       } catch (uploadErr) {
-        // Non-blocking — warn but continue saving expense without foto
-        showToast('Foto gagal diupload, expense tetap disimpan.', 'error');
+        // DEBUG — show full error on screen
+        showToast('Upload error: ' + uploadErr.message, 'error');
         resolvedFotoUrl = '';
       }
+    } else {
+      showToast('DEBUG: _fotoFile is null', '');
     }
 
     try {
