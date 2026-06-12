@@ -982,11 +982,7 @@ const ExpenseApp = (() => {
     const vendorPayStatus = metode === METODE_BAYAR.VENDOR_PAYLATER
       ? VENDOR_PAY_STATUS.BELUM : '';
 
-    _hideOverlay('overlay-expense');
-    await new Promise(r => setTimeout(r, 200));
-    showLoading('Menyimpan...');
-
-    // Upload foto if a file was chosen (url mode already has _fotoUrl set)
+    // Upload foto BEFORE showLoading — so error toast is visible
     let resolvedFotoUrl = _fotoUrl;
     if (_fotoFile) {
       showToast('DEBUG: uploading, size=' + _fotoFile.size, '');
@@ -994,13 +990,17 @@ const ExpenseApp = (() => {
         resolvedFotoUrl = await _uploadFotoFile(_fotoFile);
         showToast('Upload OK: ' + resolvedFotoUrl.slice(0, 40), 'success');
       } catch (uploadErr) {
-        // DEBUG — show full error on screen
-        showToast('Upload error: ' + uploadErr.message, 'error');
+        console.error('uploadFoto error:', uploadErr.message);
+        alert('Upload error:\n' + uploadErr.message); // alert so it cant be missed
         resolvedFotoUrl = '';
       }
     } else {
       showToast('DEBUG: _fotoFile is null', '');
     }
+
+    _hideOverlay('overlay-expense');
+    await new Promise(r => setTimeout(r, 200));
+    showLoading('Menyimpan...');
 
     try {
       if (_editingId) {
